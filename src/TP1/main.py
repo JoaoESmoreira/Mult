@@ -54,6 +54,38 @@ class jpeg:
         self.showColorMap(self.B, blue)
 
 
+    def padding(self):
+        lines = np.shape(self.data)[0]
+        cols = np.shape(self.data)[1]
+        self.dataPadding = self.data
+
+        nl, nc = 0, 0 
+        if not lines%32:
+            nl = 32 - (lines % 32)
+        
+        if not cols%32:
+            nc = 32 - (cols % 32)
+            
+        # concat lines
+        ll = self.dataPadding[-1,:][np.newaxis,:]
+        rep = ll.repeat(nl, axis=0)
+        self.dataPadding = np.vstack((self.dataPadding, rep))
+
+        # concat cols
+        cc = self.dataPadding[:, -1][:, np.newaxis]
+        rep = cc.repeat(nc, axis=1)
+        self.dataPadding = np.hstack((self.dataPadding, rep))
+
+        self.showImage(self.dataPadding)
+
+
+    def remove_padding(self):
+        lines = np.shape(self.data)[0]
+        cols = np.shape(self.data)[1]
+        self.original = self.dataPadding[:lines,:cols,:]
+        self.showImage(self.original)
+
+
     def gradient(self, name, color=(1,1,1)):
         return clr.LinearSegmentedColormap.from_list(name, [(0,0,0), color], 256)
 
@@ -66,7 +98,9 @@ class jpeg:
 
 if __name__ == "__main__":
     
-    a = jpeg('../../Assets/peppers/peppers.bmp')
+    a = jpeg('../../Assets/barn_mountains/barn_mountains.bmp')
     a.readImage()
     a.showImage()
     a.showChannels()
+    a.padding()
+    a.remove_padding()
