@@ -6,6 +6,8 @@ import matplotlib.colors as clr
  
 
 debug = False
+RGB_YCBCR=np.array([[0.299,0.587,0.114],[-0.168736, -0.331264, 0.5],[0.5, -0.418688, -0.081312]])
+YCBCR_RGB=np.linalg.inv(RGB_YCBCR)
 
 
 class jpeg:
@@ -39,13 +41,18 @@ class jpeg:
         self.G = self.data[:, :, 1]
         self.B = self.data[:, :, 2]
 
+    def splitChannelsPadding(self):
+        self.R_P = self.dataPadding[:, :, 0]
+        self.G_P = self.dataPadding[:, :, 1]
+        self.B_P = self.dataPadding[:, :, 2]
+
     def merge_channels(self):
         return  np.dstack((self.R,self.G,self.B))
 
     def showChannels(self):
-        red = self.gradient('myRed', (1,0,0))
-        green = self.gradient('myGreen', (0,1,0))
-        blue = self.gradient('myBlue', (0,0,1))
+        red = self.colormap('myRed', (1,0,0))
+        green = self.colormap('myGreen', (0,1,0))
+        blue = self.colormap('myBlue', (0,0,1))
 
         self.splitChannels()
 
@@ -60,10 +67,10 @@ class jpeg:
         self.dataPadding = self.data
 
         nl, nc = 0, 0 
-        if not lines%32:
+        if lines%32:
             nl = 32 - (lines % 32)
         
-        if not cols%32:
+        if cols%32:
             nc = 32 - (cols % 32)
             
         # concat lines
@@ -76,31 +83,87 @@ class jpeg:
         rep = cc.repeat(nc, axis=1)
         self.dataPadding = np.hstack((self.dataPadding, rep))
 
-        self.showImage(self.dataPadding)
+        if debug:
+            self.showImage(self.dataPadding)
 
 
     def remove_padding(self):
         lines = np.shape(self.data)[0]
         cols = np.shape(self.data)[1]
-        self.original = self.dataPadding[:lines,:cols,:]
-        self.showImage(self.original)
+        self.dataPadding = self.dataPadding[:lines,:cols,:]
+
+        if debug:
+            self.showImage(self.dataPadding)
 
 
-    def gradient(self, name, color=(1,1,1)):
+    def colormap(self, name, color=(1,1,1)):
         return clr.LinearSegmentedColormap.from_list(name, [(0,0,0), color], 256)
+    
+
+    def rgbToYCbCr(self):
+        self.Y  = RGB_YCBCR[0][0] * self.R_P + RGB_YCBCR[0][1] * self.G_P + RGB_YCBCR[0][2] * self.B_P
+        self.CB = RGB_YCBCR[1][0] * self.R_P + RGB_YCBCR[1][1] * self.G_P + RGB_YCBCR[1][2] * self.B_P + 128
+        self.CR = RGB_YCBCR[2][0] * self.R_P + RGB_YCBCR[2][1] * self.G_P + RGB_YCBCR[2][2] * self.B_P + 128
+
+        #self.CB[self.CB > 255] = 255
+        #self.CB[self.CB < 0] = 0
+
+        gray  = self.colormap('myGray', (1,1,1))
+
+        self.showColorMap(self.Y, gray)
+        self.showColorMap(self.CB, gray)
+        self.showColorMap(self.CR, gray)
+
+        
+        
+
+    def YCbCrTorgb(self):
+        self.R_ycbcr = (YCBCR_RGB[0][0] * self.Y) + (YCBCR_RGB[0][1] * (self.CB -128))  + (YCBCR_RGB[0][2] * (self.CR -128))
+        self.G_ycbcr = (YCBCR_RGB[1][0] * self.Y) + (YCBCR_RGB[1][1] * (self.CB -128))  + (YCBCR_RGB[1][2] * (self.CR -128))
+        self.B_ycbcr = (YCBCR_RGB[2][0] * self.Y) + (YCBCR_RGB[2][1] * (self.CB -128))  + (YCBCR_RGB[2][2] * (self.CR -128))
+
+        self.R_ycbcr = np.round(self.R_ycbcr).astype(np.uint8)
+        self.G_ycbcr = np.round(self.G_ycbcr).astype(np.uint8)
+        self.B_ycbcr = np.round(self.B_ycbcr).astype(np.uint8)
+
+        self.R_ycbcr[self.R_ycbcr>255] = 255
+        self.R_ycbcr[self.R_ycbcr<0] = 0
+        
+        self.G_ycbcr[self.G_ycbcr>255] = 255
+        self.G_ycbcr[self.G_ycbcr<0] = 0
+
+        self.B_ycbcr[self.B_ycbcr>255] = 255
+        self.B_ycbcr[self.B_ycbcr<0] = 0
+        
+        self.showImage(self.R_ycbcr)
+        self.showImage(self.G_ycbcr)
+        self.showImage(self.B_ycbcr)
+
+        self.dataPadding = np.zeros(np.shape(self.dataPadding), np.uint8)
+        self.dataPadding[:,:,0] = self.R_ycbcr
+        self.dataPadding[:,:,1] = self.G_ycbcr
+        self.dataPadding[:,:,2] = self.B_ycbcr
+
+        self.remove_padding()
+        self.showImage(self.dataPadding)
+    
 
     def encoder(self):
-        pass
+        self.readImage()
+        self.showImage()
+        self.showChannels()
+        self.padding()
+
+        self.splitChannelsPadding()
+        self.rgbToYCbCr()
+
 
     def decoder(self):
-        pass
+        self.YCbCrTorgb()
 
 
 if __name__ == "__main__":
     
     a = jpeg('../../Assets/barn_mountains/barn_mountains.bmp')
-    a.readImage()
-    a.showImage()
-    a.showChannels()
-    a.padding()
-    a.remove_padding()
+    a.encoder()
+    a.decoder()
