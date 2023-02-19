@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.image as img
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+import cv2
  
 
 debug = False
@@ -110,9 +111,10 @@ class jpeg:
 
         gray  = self.colormap('myGray', (1,1,1))
 
-        self.showColorMap(self.Y, gray)
-        self.showColorMap(self.CB, gray)
-        self.showColorMap(self.CR, gray)
+        if debug:
+            self.showColorMap(self.Y, gray)
+            self.showColorMap(self.CB, gray)
+            self.showColorMap(self.CR, gray)
 
         
         
@@ -135,9 +137,10 @@ class jpeg:
         self.B_ycbcr[self.B_ycbcr>255] = 255
         self.B_ycbcr[self.B_ycbcr<0] = 0
         
-        self.showImage(self.R_ycbcr)
-        self.showImage(self.G_ycbcr)
-        self.showImage(self.B_ycbcr)
+        if debug:
+            self.showImage(self.R_ycbcr)
+            self.showImage(self.G_ycbcr)
+            self.showImage(self.B_ycbcr)
 
         self.dataPadding = np.zeros(np.shape(self.dataPadding), np.uint8)
         self.dataPadding[:,:,0] = self.R_ycbcr
@@ -145,17 +148,41 @@ class jpeg:
         self.dataPadding[:,:,2] = self.B_ycbcr
 
         self.remove_padding()
-        self.showImage(self.dataPadding)
-    
+        if debug:
+            self.showImage(self.dataPadding)
+
+
+    def sampling(self, factor="4:2:2"):
+
+        shape = np.shape(self.CB)
+        if factor[-1] == '0':
+            widh   = int(factor[2])/4
+            cbDim  = (int(shape[1]*widh), int(shape[0]*widh))
+            crDim  = (int(shape[1]*widh), int(shape[0]*widh))
+        else:
+            widhCB = int(factor[2])/4
+            widhCR = int(factor[-1])/4
+            cbDim  = (int(shape[1]*widhCB), int(shape[0]))
+            crDim  = (int(shape[1]*widhCR), int(shape[0]))
+
+        self.cb = cv2.resize(self.CB, cbDim, interpolation=cv2.INTER_CUBIC)
+        self.showImage(self.CB)
+        self.showImage(self.cb)
+
+        self.cr= cv2.resize(self.CR, crDim, interpolation=cv2.INTER_CUBIC)
+        self.showImage(self.CR)
+        self.showImage(self.cr)
+
 
     def encoder(self):
         self.readImage()
-        self.showImage()
-        self.showChannels()
+        # self.showImage()
+        # self.showChannels()
         self.padding()
 
         self.splitChannelsPadding()
         self.rgbToYCbCr()
+        self.sampling()
 
 
     def decoder(self):
