@@ -154,7 +154,7 @@ class jpeg:
             self.showImage(self.dataPadding)
 
 
-    def sampling(self, factor="4:1:0"):
+    def sampling(self, factor="4:2:2"):
         gray  = self.colormap('MyGray', (1,1,1))
         shape = np.shape(self.CB)
         if factor[-1] == '0':
@@ -175,7 +175,7 @@ class jpeg:
             self.showColorMap(self.CR, gray, "Sampling CR")
 
     
-    def upSampling(self, factor="4:1:0"):
+    def upSampling(self, factor="4:2:2"):
         gray  = self.colormap('myGray', (1,1,1))
         shape = np.shape(self.CB)
 
