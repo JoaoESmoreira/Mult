@@ -7,6 +7,7 @@ import cv2
  
 
 debug = False
+debugSampling = True
 RGB_YCBCR=np.array([[0.299,0.587,0.114],[-0.168736, -0.331264, 0.5],[0.5, -0.418688, -0.081312]])
 YCBCR_RGB=np.linalg.inv(RGB_YCBCR)
 
@@ -31,9 +32,10 @@ class jpeg:
         plt.axis('off')
         plt.show()
     
-    def showColorMap(self, data, colorMap):
+    def showColorMap(self, data, colorMap, title=""):
         plt.figure()
         plt.axis('off')
+        plt.title(title)
         plt.imshow(data, colorMap)
         plt.show()
 
@@ -152,8 +154,8 @@ class jpeg:
             self.showImage(self.dataPadding)
 
 
-    def sampling(self, factor="4:2:2"):
-
+    def sampling(self, factor="4:1:0"):
+        gray  = self.colormap('MyGray', (1,1,1))
         shape = np.shape(self.CB)
         if factor[-1] == '0':
             widh   = int(factor[2])/4
@@ -165,13 +167,37 @@ class jpeg:
             cbDim  = (int(shape[1]*widhCB), int(shape[0]))
             crDim  = (int(shape[1]*widhCR), int(shape[0]))
 
-        self.cb = cv2.resize(self.CB, cbDim, interpolation=cv2.INTER_CUBIC)
-        self.showImage(self.CB)
-        self.showImage(self.cb)
+        self.CB = cv2.resize(self.CB, cbDim, interpolation=cv2.INTER_CUBIC)
+        self.CR = cv2.resize(self.CR, crDim, interpolation=cv2.INTER_CUBIC)
 
-        self.cr= cv2.resize(self.CR, crDim, interpolation=cv2.INTER_CUBIC)
-        self.showImage(self.CR)
-        self.showImage(self.cr)
+        if debugSampling:
+            self.showColorMap(self.CB, gray, "Sampling CB")
+            self.showColorMap(self.CR, gray, "Sampling CR")
+
+    
+    def upSampling(self, factor="4:1:0"):
+        gray  = self.colormap('myGray', (1,1,1))
+        shape = np.shape(self.CB)
+
+        if factor[-1] == '0':
+            widh   = int(4 / int(factor[2]))
+            cbDim  = (int(shape[1]*widh), int(shape[0]*widh))
+            crDim  = (int(shape[1]*widh), int(shape[0]*widh))
+        else:
+            widhCB = int(4 / int(factor[2]))
+            widhCR = int(4 / int(factor[-1]))
+            cbDim  = (int(shape[1])*widhCB, int(shape[0]))
+            crDim  = (int(shape[1])*widhCR, int(shape[0]))
+            
+        self.CB = cv2.resize(self.CB, cbDim, interpolation=cv2.INTER_CUBIC)
+        self.CR = cv2.resize(self.CR, crDim, interpolation=cv2.INTER_CUBIC)
+
+        if debugSampling:
+            print("CB shape: ", np.shape(self.CB))
+            print("Padding shape: ", np.shape(self.dataPadding))
+            self.showColorMap(self.dataPadding, gray, "dataPaddging")
+            self.showColorMap(self.CB, gray, "UnSampling CB")
+            self.showColorMap(self.CR, gray, "UnSampling CR")
 
 
     def encoder(self):
@@ -186,6 +212,7 @@ class jpeg:
 
 
     def decoder(self):
+        self.upSampling()
         self.YCbCrTorgb()
 
 
