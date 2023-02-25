@@ -204,27 +204,92 @@ class jpeg:
             self.showColorMap(self.CR, gray, "UnSampling CR")
 
 
+   
+
     def DCT(self, channel):
         # dct(dct(X, norm=”ortho”).T, norm=”ortho”).T
-        self.c_dct = dct(dct(channel, norm='ortho').T, norm='ortho').T
+        c_dct = dct(dct(channel, norm='ortho').T, norm='ortho').T
 
-        if debugDCT:
-            x = np.log10(abs(self.c_dct) + 0.00001)
+        if not debugDCT:
+            x = np.log10(abs(c_dct) + 0.00001)
             gray  = self.colormap('myGray', (1,1,1))
             self.showColorMap(x, gray)
         
-        return self.c_dct
+        return c_dct
 
     
     def IDCT(self, channel):
         # c_idct = idct(idct(channel, norm="ortho").T, norm="ortho").T
         c_idct = idct(idct(channel, axis = 0, norm = 'ortho', type = 2), axis = 1, norm = 'ortho', type = 2)
 
-        if debugDCT:
+        if not debugDCT:
             gray  = self.colormap('myGray', (1,1,1))
             self.showColorMap(c_idct, gray)
 
         return c_idct
+    
+
+    def dctBlock(self, blocks=64):
+        length = self.Y.shape
+        self.Y_dct = np.zeros(length)
+
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.Y[i:i+blocks, j:j+blocks]
+                self.Y_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
+
+        length = self.CB.shape
+        self.CB_dct = np.zeros(length)
+        self.CR_dct = np.zeros(length)
+
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.CB[i:i+blocks, j:j+blocks]
+                self.CB_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
+                slice = self.CR[i:i+blocks, j:j+blocks]
+                self.CR_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
+
+        if debugDCT:
+            gray  = self.colormap('myGray', (1,1,1))
+
+            y_dct = np.log(abs(self.Y_dct)+0.00001)
+            self.showColorMap(y_dct, gray, 'Y dct')
+
+            cb_dct = np.log(abs(self.CB_dct)+0.00001)
+            self.showColorMap(cb_dct, gray, 'CB dct')
+
+            cr_dct = np.log(abs(self.CR_dct)+0.00001)
+            self.showColorMap(cr_dct, gray, 'CR dct')
+
+
+    def idctBlock(self, blocks=64):
+        length = self.Y.shape
+
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.Y_dct[i:i+blocks, j:j+blocks]
+                self.Y_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
+
+        length = self.CB.shape
+
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.CB_dct[i:i+blocks, j:j+blocks]
+                self.CB_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
+                slice = self.CR_dct[i:i+blocks, j:j+blocks]
+                self.CR_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
+
+        if debugDCT:
+            gray  = self.colormap('myGray', (1,1,1))
+
+            y_dct = np.log(abs(self.Y_dct)+0.00001)
+            self.showColorMap(y_dct, gray, 'Y dct')
+
+            cb_dct = np.log(abs(self.CB_dct)+0.00001)
+            self.showColorMap(cb_dct, gray, 'CB dct')
+
+            cr_dct = np.log(abs(self.CR_dct)+0.00001)
+            self.showColorMap(cr_dct, gray, 'CR dct')
 
 
     def encoder(self): 
@@ -236,10 +301,11 @@ class jpeg:
         self.splitChannelsPadding()
         self.rgbToYCbCr()
         self.sampling()
-        self.DCT(self.CB)
+        self.dctBlock()
+        # self.DCT(self.CB)
 
     def decoder(self):
-        self.IDCT(self.c_dct)
+        self.idctBlock()
         self.upSampling()
         self.YCbCrTorgb()
 
