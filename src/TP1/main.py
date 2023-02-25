@@ -4,10 +4,12 @@ import matplotlib.image as img
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 import cv2
- 
+from scipy.fftpack import dct, idct
+
 
 debug = False
-debugSampling = True
+debugSampling = False
+debugDCT = True
 RGB_YCBCR=np.array([[0.299,0.587,0.114],[-0.168736, -0.331264, 0.5],[0.5, -0.418688, -0.081312]])
 YCBCR_RGB=np.linalg.inv(RGB_YCBCR)
 
@@ -158,12 +160,12 @@ class jpeg:
         gray  = self.colormap('MyGray', (1,1,1))
         shape = np.shape(self.CB)
         if factor[-1] == '0':
-            widh   = int(factor[2])/4
+            widh   = int(factor[2])/int(factor[0])
             cbDim  = (int(shape[1]*widh), int(shape[0]*widh))
             crDim  = (int(shape[1]*widh), int(shape[0]*widh))
         else:
-            widhCB = int(factor[2])/4
-            widhCR = int(factor[-1])/4
+            widhCB = int(factor[2])/int(factor[0])
+            widhCR = int(factor[-1])/int(factor[0])
             cbDim  = (int(shape[1]*widhCB), int(shape[0]))
             crDim  = (int(shape[1]*widhCR), int(shape[0]))
 
@@ -171,6 +173,8 @@ class jpeg:
         self.CR = cv2.resize(self.CR, crDim, interpolation=cv2.INTER_CUBIC)
 
         if debugSampling:
+            print("CB shape: ", np.shape(self.CB))
+            print("Padding shape: ", np.shape(self.dataPadding))
             self.showColorMap(self.CB, gray, "Sampling CB")
             self.showColorMap(self.CR, gray, "Sampling CR")
 
@@ -180,12 +184,12 @@ class jpeg:
         shape = np.shape(self.CB)
 
         if factor[-1] == '0':
-            widh   = int(4 / int(factor[2]))
+            widh   = int(int(factor[0]) / int(factor[2]))
             cbDim  = (int(shape[1]*widh), int(shape[0]*widh))
             crDim  = (int(shape[1]*widh), int(shape[0]*widh))
         else:
-            widhCB = int(4 / int(factor[2]))
-            widhCR = int(4 / int(factor[-1]))
+            widhCB = int(int(factor[0]) / int(factor[2]))
+            widhCR = int(int(factor[0]) / int(factor[-1]))
             cbDim  = (int(shape[1])*widhCB, int(shape[0]))
             crDim  = (int(shape[1])*widhCR, int(shape[0]))
             
@@ -200,7 +204,30 @@ class jpeg:
             self.showColorMap(self.CR, gray, "UnSampling CR")
 
 
-    def encoder(self):
+    def DCT(self, channel):
+        # dct(dct(X, norm=”ortho”).T, norm=”ortho”).T
+        self.c_dct = dct(dct(channel, norm='ortho').T, norm='ortho').T
+
+        if debugDCT:
+            x = np.log10(abs(self.c_dct) + 0.00001)
+            gray  = self.colormap('myGray', (1,1,1))
+            self.showColorMap(x, gray)
+        
+        return self.c_dct
+
+    
+    def IDCT(self, channel):
+        # c_idct = idct(idct(channel, norm="ortho").T, norm="ortho").T
+        c_idct = idct(idct(channel, axis = 0, norm = 'ortho', type = 2), axis = 1, norm = 'ortho', type = 2)
+
+        if debugDCT:
+            gray  = self.colormap('myGray', (1,1,1))
+            self.showColorMap(c_idct, gray)
+
+        return c_idct
+
+
+    def encoder(self): 
         self.readImage()
         # self.showImage()
         # self.showChannels()
@@ -209,9 +236,10 @@ class jpeg:
         self.splitChannelsPadding()
         self.rgbToYCbCr()
         self.sampling()
-
+        self.DCT(self.CB)
 
     def decoder(self):
+        self.IDCT(self.c_dct)
         self.upSampling()
         self.YCbCrTorgb()
 
