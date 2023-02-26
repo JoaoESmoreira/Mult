@@ -10,11 +10,34 @@ from scipy.fftpack import dct, idct
 debug = False
 debugSampling = False
 debugDCT = True
-RGB_YCBCR=np.array([[0.299,0.587,0.114],[-0.168736, -0.331264, 0.5],[0.5, -0.418688, -0.081312]])
-YCBCR_RGB=np.linalg.inv(RGB_YCBCR)
+
+
 
 
 class jpeg:
+
+
+    RGB_YCBCR=np.array([[0.299,0.587,0.114],[-0.168736, -0.331264, 0.5],[0.5, -0.418688, -0.081312]])
+    YCBCR_RGB=np.linalg.inv(RGB_YCBCR)
+    
+    q_y = np.array([[16, 11, 10, 16, 24, 40, 51, 61],
+                                    [12, 12, 14, 19, 26, 58, 60, 55],
+                                    [14, 13, 16, 24, 40, 57, 69, 56],
+                                    [14, 17, 22, 29, 51, 87, 80, 62],
+                                    [18, 22, 37, 56, 68, 109, 103, 77],
+                                    [24, 35, 55, 64, 81, 104, 113, 92],
+                                    [49, 64, 78, 87, 103, 121, 120, 101],
+                                    [72, 92, 95, 98, 112, 100, 103, 99]])
+
+    q_cbcr = np.array([[17, 18, 24, 47, 99, 99, 99, 99],
+          [18, 21, 26, 66, 99, 99, 99, 99],
+          [24, 26, 56, 99, 99, 99, 99, 99],
+          [47, 66, 99, 99, 99, 99, 99, 99],
+          [99, 99, 99, 99, 99, 99, 99, 99],
+          [99, 99, 99, 99, 99, 99, 99, 99],
+          [99, 99, 99, 99, 99, 99, 99, 99],
+          [99, 99, 99, 99, 99, 99, 99, 99]])
+
     def __init__(self, filename):
         self.filename = filename
 
@@ -106,9 +129,9 @@ class jpeg:
     
 
     def rgbToYCbCr(self):
-        self.Y  = RGB_YCBCR[0][0] * self.R_P + RGB_YCBCR[0][1] * self.G_P + RGB_YCBCR[0][2] * self.B_P
-        self.CB = RGB_YCBCR[1][0] * self.R_P + RGB_YCBCR[1][1] * self.G_P + RGB_YCBCR[1][2] * self.B_P + 128
-        self.CR = RGB_YCBCR[2][0] * self.R_P + RGB_YCBCR[2][1] * self.G_P + RGB_YCBCR[2][2] * self.B_P + 128
+        self.Y  = self.RGB_YCBCR[0][0] * self.R_P + self.RGB_YCBCR[0][1] * self.G_P + self.RGB_YCBCR[0][2] * self.B_P
+        self.CB = self.RGB_YCBCR[1][0] * self.R_P + self.RGB_YCBCR[1][1] * self.G_P + self.RGB_YCBCR[1][2] * self.B_P + 128
+        self.CR = self.RGB_YCBCR[2][0] * self.R_P + self.RGB_YCBCR[2][1] * self.G_P + self.RGB_YCBCR[2][2] * self.B_P + 128
 
         #self.CB[self.CB > 255] = 255
         #self.CB[self.CB < 0] = 0
@@ -124,9 +147,9 @@ class jpeg:
         
 
     def YCbCrTorgb(self):
-        self.R_ycbcr = (YCBCR_RGB[0][0] * self.Y) + (YCBCR_RGB[0][1] * (self.CB -128))  + (YCBCR_RGB[0][2] * (self.CR -128))
-        self.G_ycbcr = (YCBCR_RGB[1][0] * self.Y) + (YCBCR_RGB[1][1] * (self.CB -128))  + (YCBCR_RGB[1][2] * (self.CR -128))
-        self.B_ycbcr = (YCBCR_RGB[2][0] * self.Y) + (YCBCR_RGB[2][1] * (self.CB -128))  + (YCBCR_RGB[2][2] * (self.CR -128))
+        self.R_ycbcr = (self.YCBCR_RGB[0][0] * self.Y) + (self.YCBCR_RGB[0][1] * (self.CB -128))  + (self.YCBCR_RGB[0][2] * (self.CR -128))
+        self.G_ycbcr = (self.YCBCR_RGB[1][0] * self.Y) + (self.YCBCR_RGB[1][1] * (self.CB -128))  + (self.YCBCR_RGB[1][2] * (self.CR -128))
+        self.B_ycbcr = (self.YCBCR_RGB[2][0] * self.Y) + (self.YCBCR_RGB[2][1] * (self.CB -128))  + (self.YCBCR_RGB[2][2] * (self.CR -128))
 
         self.R_ycbcr = np.round(self.R_ycbcr).astype(np.uint8)
         self.G_ycbcr = np.round(self.G_ycbcr).astype(np.uint8)
@@ -202,19 +225,12 @@ class jpeg:
             self.showColorMap(self.dataPadding, gray, "dataPaddging")
             self.showColorMap(self.CB, gray, "UnSampling CB")
             self.showColorMap(self.CR, gray, "UnSampling CR")
-
-
    
 
     def DCT(self, channel):
         # dct(dct(X, norm=”ortho”).T, norm=”ortho”).T
         c_dct = dct(dct(channel, norm='ortho').T, norm='ortho').T
 
-        if not debugDCT:
-            x = np.log10(abs(c_dct) + 0.00001)
-            gray  = self.colormap('myGray', (1,1,1))
-            self.showColorMap(x, gray)
-        
         return c_dct
 
     
@@ -222,14 +238,10 @@ class jpeg:
         # c_idct = idct(idct(channel, norm="ortho").T, norm="ortho").T
         c_idct = idct(idct(channel, axis = 0, norm = 'ortho', type = 2), axis = 1, norm = 'ortho', type = 2)
 
-        if not debugDCT:
-            gray  = self.colormap('myGray', (1,1,1))
-            self.showColorMap(c_idct, gray)
-
         return c_idct
     
 
-    def dctBlock(self, blocks=64):
+    def dctBlock(self, blocks=8):
         length = self.Y.shape
         self.Y_dct = np.zeros(length)
 
@@ -262,20 +274,21 @@ class jpeg:
             self.showColorMap(cr_dct, gray, 'CR dct')
 
 
-    def idctBlock(self, blocks=64):
-        length = self.Y.shape
+    def idctBlock(self, blocks=8):
+        length = self.Y_dct.shape
 
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
                 slice = self.Y_dct[i:i+blocks, j:j+blocks]
                 self.Y_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
 
-        length = self.CB.shape
+        length = self.CB_dct.shape
 
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
                 slice = self.CB_dct[i:i+blocks, j:j+blocks]
                 self.CB_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
+
                 slice = self.CR_dct[i:i+blocks, j:j+blocks]
                 self.CR_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
 
@@ -283,14 +296,68 @@ class jpeg:
             gray  = self.colormap('myGray', (1,1,1))
 
             y_dct = np.log(abs(self.Y_dct)+0.00001)
-            self.showColorMap(y_dct, gray, 'Y dct')
+            self.showColorMap(self.Y_dct, gray, 'Y idct')
 
             cb_dct = np.log(abs(self.CB_dct)+0.00001)
-            self.showColorMap(cb_dct, gray, 'CB dct')
+            self.showColorMap(self.CB_dct, gray, 'CB idct')
 
             cr_dct = np.log(abs(self.CR_dct)+0.00001)
-            self.showColorMap(cr_dct, gray, 'CR dct')
+            self.showColorMap(self.CB_dct, gray, 'CR idct')
+            
 
+    def quantdct(self, blocks=8):
+
+        length = self.Y_dct.shape
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.Y_dct[i:i+blocks, j:j+blocks]
+                self.Y_dct[i:i+blocks, j:j+blocks] = slice / self.q_y
+
+        length = self.CB_dct.shape
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.CB_dct[i:i+blocks, j:j+blocks]
+                self.CB_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
+
+                slice = self.CR_dct[i:i+blocks, j:j+blocks]
+                self.CR_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
+
+        self.Y_dct = np.round(self.Y_dct)
+        self.CB_dct = np.round(self.CB_dct)
+        self.CR_dct = np.round(self.CR_dct)
+
+        if debugDCT:
+            gray  = self.colormap('myGray', (1,1,1))
+            self.showColorMap(np.log(abs(self.Y_dct ) + 0.0001), gray, 'Y quantization')
+            self.showColorMap(np.log(abs(self.CB_dct) + 0.0001), gray, 'CB quantization')
+            self.showColorMap(np.log(abs(self.CR_dct) + 0.0001), gray, 'CR quantization')
+
+
+    def iquantdct(self, blocks=8):
+        length = self.Y_dct.shape
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.Y_dct[i:i+blocks, j:j+blocks]
+                self.Y_dct[i:i+blocks, j:j+blocks] = slice * self.q_y
+
+        length = self.CB_dct.shape
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.CB_dct[i:i+blocks, j:j+blocks]
+                self.CB_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
+
+                slice = self.CR_dct[i:i+blocks, j:j+blocks]
+                self.CR_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
+
+        self.Y_dct = np.round(self.Y_dct)
+        self.CB_dct = np.round(self.CB_dct)
+        self.CR_dct = np.round(self.CR_dct)
+
+        if debugDCT:
+            gray  = self.colormap('myGray', (1,1,1))
+            self.showColorMap(np.log(abs(self.Y_dct ) + 0.0001), gray, 'Y  iquantization')
+            self.showColorMap(np.log(abs(self.CB_dct) + 0.0001), gray, 'CB iquantization')
+            self.showColorMap(np.log(abs(self.CR_dct) + 0.0001), gray, 'CR iquantization')
 
     def encoder(self): 
         self.readImage()
@@ -302,9 +369,10 @@ class jpeg:
         self.rgbToYCbCr()
         self.sampling()
         self.dctBlock()
-        # self.DCT(self.CB)
+        self.quantdct()
 
     def decoder(self):
+        self.iquantdct()
         self.idctBlock()
         self.upSampling()
         self.YCbCrTorgb()

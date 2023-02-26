@@ -6,59 +6,58 @@ tansiçoes abruptas -> canto direito com valores altos
 tansiçoes suaves -> canto direito com valores baixos
 
 """
+    def quantdct(self, blocks=8):
 
-pip install -r requirements.txt
+        length = self.Y_dct.shape
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.Y_dct[i:i+blocks, j:j+blocks]
+                self.Y_dct[i:i+blocks, j:j+blocks] = slice / self.q_y
 
+        length = self.CB_dct.shape
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.CB_dct[i:i+blocks, j:j+blocks]
+                self.CB_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
 
-    def sampling(self, factor="4:1:1"):
-        gray  = self.colormap('mygray', (1,1,1))
-        shape = np.shape(self.cb)
-        self.shape = shape
+                slice = self.CR_dct[i:i+blocks, j:j+blocks]
+                self.CR_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
 
-        if factor[-1] == '0':
-            widh   = int(factor[2])/4
-            cbdim  = (int(shape[1]*widh), int(shape[0]*widh))
-            crdim  = (int(shape[1]*widh), int(shape[0]*widh))
-        else:        
-            widhcb = int(factor[2])/4
-            widhcr = int(factor[-1])/4
-            cbdim  = (int(shape[1]*widhcb), int(shape[0]))
-            crdim  = (int(shape[1]*widhcr), int(shape[0]))
+        self.Y_dct = np.round(self.Y_dct).astype(np.uint8)
+        self.CB_dct = np.round(self.CB_dct).astype(np.uint8)
+        self.CR_dct = np.round(self.CR_dct).astype(np.uint8)
 
-        self.cb = cv2.resize(self.cb, cbdim, interpolation=cv2.inter_cubic)
-        self.cr= cv2.resize(self.cr, crdim, interpolation=cv2.inter_cubic)
-
-        if debugsampling:
-            self.showcolormap(self.cb, gray)
-            self.showcolormap(self.cb, gray)
-            self.showcolormap(self.cr, gray)
-            self.showcolormap(self.cr, gray)
-
-    
-    def upsampling(self, factor="4:1:1"):
-        gray  = self.colormap('mygray', (1,1,1))
-        shape = np.shape(self.cb)
-
-        if factor[-1] == '0':
-            widh   = int(factor[2])
-            cbdim  = (int(shape[1]*widh), int(shape[0]*widh))
-            crdim  = (int(shape[1]*widh), int(shape[0]*widh))
-        
-        else:
-            widhcb = 4/int(factor[2]) 
-            widhcr = 4/int(factor[-1])
-            cbdim  = (int(shape[1])*widhcb, int(shape[0]))
-            crdim  = (int(shape[1])*widhcr, int(shape[0]))
-            
+        gray  = self.colormap('myGray', (1,1,1))
+        self.showColorMap(self.Y_dct, gray, 'Y quantization')
+        self.showColorMap(self.CB_dct, gray, 'CB quantization')
+        self.showColorMap(self.CR_dct, gray, 'CR quantization')
 
 
-        self.cb = cv2.resize(self.cb, cbdim, interpolation=cv2.inter_cubic)
-        self.cr= cv2.resize(self.cr, crdim, interpolation=cv2.inter_cubic)
+    def iquantdct(self, blocks=8):
 
-        print(cbdim)
-        print(np.shape(self.cb))
-        print(np.shape(self.datapadding))
+        length = self.Y_dct.shape
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.Y_dct[i:i+blocks, j:j+blocks]
+                self.Y_dct[i:i+blocks, j:j+blocks] = slice * self.q_y
 
-        self.showcolormap(self.datapadding, gray)
-        self.showcolormap(self.cb, gray)
-        self.showcolormap(self.cr, gray)
+        length = self.CB_dct.shape
+        for i in range(0, length[0], blocks):
+            for j in range(0, length[1], blocks):
+                slice = self.CB_dct[i:i+blocks, j:j+blocks]
+                self.CB_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
+
+                slice = self.CR_dct[i:i+blocks, j:j+blocks]
+                self.CR_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
+
+        self.Y_dct = np.round(self.Y_dct).astype(np.uint8)
+        self.CB_dct = np.round(self.CB_dct).astype(np.uint8)
+        self.CR_dct = np.round(self.CR_dct).astype(np.uint8)
+
+        gray  = self.colormap('myGray', (1,1,1))
+        # y_dct = np.log(abs(self.Y_dct)+0.00001)
+        # cb_dct = np.log(abs(self.CB_dct)+0.00001)
+        # cr_dct = np.log(abs(self.CR_dct)+0.00001)
+        self.showColorMap(self.Y_dct, gray, 'Y iQuantization')
+        self.showColorMap(self.CB_dct, gray, 'CB iQuantization')
+        self.showColorMap(self.CR_dct, gray, 'CR iQuantization')
