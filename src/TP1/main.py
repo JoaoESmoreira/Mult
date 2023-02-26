@@ -305,22 +305,26 @@ class jpeg:
             self.showColorMap(self.CB_dct, gray, 'CR idct')
             
 
-    def quantdct(self, blocks=8):
+    def quantDCT(self, blocks=8, quality=100):
+        self.calcQuality(quality)
 
         length = self.Y_dct.shape
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
                 slice = self.Y_dct[i:i+blocks, j:j+blocks]
-                self.Y_dct[i:i+blocks, j:j+blocks] = slice / self.q_y
+                # self.Y_dct[i:i+blocks, j:j+blocks] = slice / self.q_y
+                self.Y_dct[i:i+blocks, j:j+blocks] = slice / self.qualityQ_Y
 
         length = self.CB_dct.shape
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
                 slice = self.CB_dct[i:i+blocks, j:j+blocks]
-                self.CB_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
+                # self.CB_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
+                self.CB_dct[i:i+blocks, j:j+blocks] = slice / self.qualityQ_CBCR
 
                 slice = self.CR_dct[i:i+blocks, j:j+blocks]
-                self.CR_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
+                # self.CR_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
+                self.CR_dct[i:i+blocks, j:j+blocks] = slice / self.qualityQ_CBCR
 
         self.Y_dct = np.round(self.Y_dct)
         self.CB_dct = np.round(self.CB_dct)
@@ -333,21 +337,26 @@ class jpeg:
             self.showColorMap(np.log(abs(self.CR_dct) + 0.0001), gray, 'CR quantization')
 
 
-    def iquantdct(self, blocks=8):
+    def iQuantDCT(self, blocks=8, quality=100):
+        self.calcQuality(quality)
+
         length = self.Y_dct.shape
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
                 slice = self.Y_dct[i:i+blocks, j:j+blocks]
-                self.Y_dct[i:i+blocks, j:j+blocks] = slice * self.q_y
+                # self.Y_dct[i:i+blocks, j:j+blocks] = slice * self.q_y
+                self.Y_dct[i:i+blocks, j:j+blocks] = slice * self.qualityQ_Y
 
         length = self.CB_dct.shape
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
                 slice = self.CB_dct[i:i+blocks, j:j+blocks]
-                self.CB_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
+                # self.CB_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
+                self.CB_dct[i:i+blocks, j:j+blocks] = slice * self.qualityQ_CBCR
 
                 slice = self.CR_dct[i:i+blocks, j:j+blocks]
-                self.CR_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
+                # self.CR_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
+                self.CR_dct[i:i+blocks, j:j+blocks] = slice * self.qualityQ_CBCR
 
         self.Y_dct = np.round(self.Y_dct)
         self.CB_dct = np.round(self.CB_dct)
@@ -359,6 +368,29 @@ class jpeg:
             self.showColorMap(np.log(abs(self.CB_dct) + 0.0001), gray, 'CB iquantization')
             self.showColorMap(np.log(abs(self.CR_dct) + 0.0001), gray, 'CR iquantization')
 
+
+    def calcQuality(self, quality):
+        if quality >= 50:
+            scaleFactor = (100 - quality) / 50
+        else:
+            scaleFactor = 50 / quality
+
+        qualityQ_Y = self.q_y * scaleFactor
+        qualityQ_CBCR = self.q_cbcr * scaleFactor
+
+
+        qualityQ_CBCR = np.round(qualityQ_CBCR).astype(np.uint8)
+        qualityQ_Y = np.round(qualityQ_Y).astype(np.uint8)
+
+        qualityQ_Y[qualityQ_Y < 1] = 1
+        qualityQ_Y[qualityQ_Y > 255] = 255
+
+        qualityQ_CBCR[qualityQ_CBCR < 1] = 1
+        qualityQ_CBCR[qualityQ_CBCR > 255] = 255
+
+        self.qualityQ_Y, self.qualityQ_CBCR = qualityQ_Y, qualityQ_CBCR
+
+
     def encoder(self): 
         self.readImage()
         # self.showImage()
@@ -369,10 +401,10 @@ class jpeg:
         self.rgbToYCbCr()
         self.sampling()
         self.dctBlock()
-        self.quantdct()
+        self.quantDCT()
 
     def decoder(self):
-        self.iquantdct()
+        self.iQuantDCT()
         self.idctBlock()
         self.upSampling()
         self.YCbCrTorgb()
