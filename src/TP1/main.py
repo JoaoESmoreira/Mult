@@ -10,6 +10,7 @@ from scipy.fftpack import dct, idct
 debug = False
 debugSampling = False
 debugDCT = True
+debugDPCM = True
 
 
 
@@ -391,6 +392,68 @@ class jpeg:
         self.qualityQ_Y, self.qualityQ_CBCR = qualityQ_Y, qualityQ_CBCR
 
 
+    #nao mecher no primeiro valor, guardar as diferenças dos sucessivos
+    def dpcm(self):
+        self.Y_dpcm = np.copy(self.Y_dct)
+        self.Cb_dpcm = np.copy(self.CB_dct)
+        self.Cr_dpcm = np.copy(self.CR_dct)
+
+        
+        for i in range(int(self.Y_dct.shape[0]/8)):
+            for j in range(int(self.Y_dct.shape[1]/8)):
+                if (j != 0):
+                    self.Y_dpcm[i*8, j*8] = self.Y_dct[i*8, j*8] - self.Y_dct[i*8, j*8-8]
+                else:
+                    if(i != 0):
+                        self.Y_dpcm[i*8, j*8] = self.Y_dct[i*8, j*8] - self.Y_dct[i*8-8, int(self.Y_dct.shape[1])-8]
+        
+
+        for i in range(int(self.CB_dct.shape[0]/8)):
+            for j in range(int(self.CB_dct.shape[1]/8)):
+                if (j != 0):
+                    self.Cb_dpcm[i*8, j*8] = self.CB_dct[i*8, j*8] - self.CB_dct[i*8, j*8-8]
+                    self.Cr_dpcm[i*8, j*8] = self.CR_dct[i*8, j*8] - self.CR_dct[i*8, j*8-8]
+                else:
+                    if(i != 0):
+                        self.Cb_dpcm[i*8, j*8] = self.CB_dct[i*8, j*8] - self.CB_dct[i*8-8, int(self.CB_dct.shape[1])-8]
+                        self.Cr_dpcm[i*8, j*8] = self.CR_dct[i*8, j*8] - self.CR_dct[i*8-8, int(self.CB_dct.shape[1])-8]
+        
+
+        if debugDPCM:
+            gray  = self.colormap('myGray', (1,1,1))
+            self.showColorMap(np.log(abs(self.Y_dpcm ) + 0.0001), gray, 'Y DPCM')
+            self.showColorMap(np.log(abs(self.Cb_dpcm) + 0.0001), gray, 'CB DPCM')
+            self.showColorMap(np.log(abs(self.Cr_dpcm) + 0.0001), gray, 'CR DPCM')
+
+    def reverse_dpcm(self):
+
+        self.Y_dct2 = np.copy(self.Y_dpcm)
+        self.CB_dct2 = np.copy(self.cb_dpcm)
+        self.CR_dct2 = np.copy(self.Cr_dpcm)
+        
+        for i in range(int(self.Y_dpcm.shape[0]/8)):
+            for j in range(int(self.Y_dpcm.shape[1]/8)):
+                if (j != 0):
+                    self.Y_dct2[i*8, j*8] = self.Y_dct2[i*8, j*8-8] + self.Y_dpcm[i*8, j*8]
+                else:
+                    if(i != 0):
+                        self.Y_dct2[i*8, j*8] = self.Y_dct2[i*8-8, int(self.Y_dpcm.shape[1])-8] + self.Y_dpcm[i*8, j*8]
+                
+
+        for i in range(int(self.cb_dpcm.shape[0]/8)):
+            for j in range(int(self.cb_dpcm.shape[1]/8)):
+                if (j != 0):
+                    self.CB_dct2[i*8, j*8] = self.CB_dct2[i*8, j*8-8] + self.cb_dpcm[i*8, j*8] 
+                    self.CR_dct2[i*8, j*8] = self.CR_dct2[i*8, j*8-8] + self.Cr_dpcm[i*8, j*8] 
+                else:
+                    if(i != 0):
+                        self.CB_dct2[i*8, j*8] = self.CB_dct2[i*8-8, int(self.cb_dpcm.shape[1])-8] + self.cb_dpcm[i*8, j*8] 
+                        self.CR_dct2[i*8, j*8] = self.CR_dct2[i*8-8, int(self.cb_dpcm.shape[1])-8] + self.Cr_dpcm[i*8, j*8] 
+                
+
+            
+
+
     def encoder(self): 
         self.readImage()
         # self.showImage()
@@ -401,10 +464,11 @@ class jpeg:
         self.rgbToYCbCr()
         self.sampling()
         self.dctBlock()
-        self.quantDCT()
+        self.quantDCT(8,75)
+        self.dpcm()
 
     def decoder(self):
-        self.iQuantDCT()
+        self.iQuantDCT(8,75)
         self.idctBlock()
         self.upSampling()
         self.YCbCrTorgb()
