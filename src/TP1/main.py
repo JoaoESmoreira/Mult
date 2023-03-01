@@ -244,130 +244,134 @@ class jpeg:
 
     def dctBlock(self, blocks=8):
         length = self.Y.shape
-        self.Y_dct = np.zeros(length)
+        Y_dct = np.zeros(length)
 
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
                 slice = self.Y[i:i+blocks, j:j+blocks]
-                self.Y_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
+                Y_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
 
         length = self.CB.shape
-        self.CB_dct = np.zeros(length)
-        self.CR_dct = np.zeros(length)
+        CB_dct = np.zeros(length)
+        CR_dct = np.zeros(length)
 
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
                 slice = self.CB[i:i+blocks, j:j+blocks]
-                self.CB_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
+                CB_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
                 slice = self.CR[i:i+blocks, j:j+blocks]
-                self.CR_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
+                CR_dct[i:i+blocks, j:j+blocks] = self.DCT(slice)
+
+        self.Y  = Y_dct
+        self.CB = CB_dct
+        self.CR = CR_dct
 
         if debugDCT:
             gray  = self.colormap('myGray', (1,1,1))
 
-            y_dct = np.log(abs(self.Y_dct)+0.00001)
+            y_dct = np.log(abs(self.Y)+0.00001)
             self.showColorMap(y_dct, gray, 'Y dct')
 
-            cb_dct = np.log(abs(self.CB_dct)+0.00001)
+            cb_dct = np.log(abs(self.CB)+0.00001)
             self.showColorMap(cb_dct, gray, 'CB dct')
 
-            cr_dct = np.log(abs(self.CR_dct)+0.00001)
+            cr_dct = np.log(abs(self.CR)+0.00001)
             self.showColorMap(cr_dct, gray, 'CR dct')
 
 
     def idctBlock(self, blocks=8):
-        length = self.Y_dct.shape
+        length = self.Y.shape
 
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
-                slice = self.Y_dct[i:i+blocks, j:j+blocks]
-                self.Y_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
+                slice = self.Y[i:i+blocks, j:j+blocks]
+                self.Y[i:i+blocks, j:j+blocks] = self.IDCT(slice)
 
-        length = self.CB_dct.shape
+        length = self.CB.shape
 
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
-                slice = self.CB_dct[i:i+blocks, j:j+blocks]
-                self.CB_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
+                slice = self.CB[i:i+blocks, j:j+blocks]
+                self.CB[i:i+blocks, j:j+blocks] = self.IDCT(slice)
 
-                slice = self.CR_dct[i:i+blocks, j:j+blocks]
-                self.CR_dct[i:i+blocks, j:j+blocks] = self.IDCT(slice)
+                slice = self.CR[i:i+blocks, j:j+blocks]
+                self.CR[i:i+blocks, j:j+blocks] = self.IDCT(slice)
 
         if debugDCT:
             gray  = self.colormap('myGray', (1,1,1))
 
-            y_dct = np.log(abs(self.Y_dct)+0.00001)
-            self.showColorMap(self.Y_dct, gray, 'Y idct')
+            y_dct = np.log(abs(self.Y)+0.00001)
+            self.showColorMap(self.Y, gray, 'Y idct')
 
-            cb_dct = np.log(abs(self.CB_dct)+0.00001)
-            self.showColorMap(self.CB_dct, gray, 'CB idct')
+            cb_dct = np.log(abs(self.CB)+0.00001)
+            self.showColorMap(self.CB, gray, 'CB idct')
 
-            cr_dct = np.log(abs(self.CR_dct)+0.00001)
-            self.showColorMap(self.CB_dct, gray, 'CR idct')
+            cr_dct = np.log(abs(self.CR)+0.00001)
+            self.showColorMap(self.CB, gray, 'CR idct')
             
 
     def quantDCT(self, blocks=8, quality=100):
         self.calcQuality(quality)
 
-        length = self.Y_dct.shape
+        length = self.Y.shape
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
-                slice = self.Y_dct[i:i+blocks, j:j+blocks]
+                slice = self.Y[i:i+blocks, j:j+blocks]
                 # self.Y_dct[i:i+blocks, j:j+blocks] = slice / self.q_y
-                self.Y_dct[i:i+blocks, j:j+blocks] = slice / self.qualityQ_Y
+                self.Y[i:i+blocks, j:j+blocks] = slice / self.qualityQ_Y
 
-        length = self.CB_dct.shape
+        length = self.CB.shape
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
-                slice = self.CB_dct[i:i+blocks, j:j+blocks]
+                slice = self.CB[i:i+blocks, j:j+blocks]
                 # self.CB_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
-                self.CB_dct[i:i+blocks, j:j+blocks] = slice / self.qualityQ_CBCR
+                self.CB[i:i+blocks, j:j+blocks] = slice / self.qualityQ_CBCR
 
-                slice = self.CR_dct[i:i+blocks, j:j+blocks]
+                slice = self.CR[i:i+blocks, j:j+blocks]
                 # self.CR_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
-                self.CR_dct[i:i+blocks, j:j+blocks] = slice / self.qualityQ_CBCR
+                self.CR[i:i+blocks, j:j+blocks] = slice / self.qualityQ_CBCR
 
-        self.Y_dct = np.round(self.Y_dct)
-        self.CB_dct = np.round(self.CB_dct)
-        self.CR_dct = np.round(self.CR_dct)
+        self.Y= np.round(self.Y)
+        self.CB = np.round(self.CB)
+        self.CR = np.round(self.CR)
 
         if debugDCT:
             gray  = self.colormap('myGray', (1,1,1))
-            self.showColorMap(np.log(abs(self.Y_dct ) + 0.0001), gray, 'Y quantization')
-            self.showColorMap(np.log(abs(self.CB_dct) + 0.0001), gray, 'CB quantization')
-            self.showColorMap(np.log(abs(self.CR_dct) + 0.0001), gray, 'CR quantization')
+            self.showColorMap(np.log(abs(self.Y) + 0.0001), gray, 'Y quantization')
+            self.showColorMap(np.log(abs(self.CB) + 0.0001), gray, 'CB quantization')
+            self.showColorMap(np.log(abs(self.CR) + 0.0001), gray, 'CR quantization')
 
 
     def iQuantDCT(self, blocks=8, quality=100):
         self.calcQuality(quality)
 
-        length = self.Y_dct.shape
+        length = self.Y.shape
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
-                slice = self.Y_dct[i:i+blocks, j:j+blocks]
+                slice = self.Y[i:i+blocks, j:j+blocks]
                 # self.Y_dct[i:i+blocks, j:j+blocks] = slice * self.q_y
-                self.Y_dct[i:i+blocks, j:j+blocks] = slice * self.qualityQ_Y
+                self.Y[i:i+blocks, j:j+blocks] = slice * self.qualityQ_Y
 
-        length = self.CB_dct.shape
+        length = self.CB.shape
         for i in range(0, length[0], blocks):
             for j in range(0, length[1], blocks):
-                slice = self.CB_dct[i:i+blocks, j:j+blocks]
+                slice = self.CB[i:i+blocks, j:j+blocks]
                 # self.CB_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
-                self.CB_dct[i:i+blocks, j:j+blocks] = slice * self.qualityQ_CBCR
+                self.CB[i:i+blocks, j:j+blocks] = slice * self.qualityQ_CBCR
 
-                slice = self.CR_dct[i:i+blocks, j:j+blocks]
+                slice = self.CR[i:i+blocks, j:j+blocks]
                 # self.CR_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
-                self.CR_dct[i:i+blocks, j:j+blocks] = slice * self.qualityQ_CBCR
+                self.CR[i:i+blocks, j:j+blocks] = slice * self.qualityQ_CBCR
 
-        self.Y_dct = np.round(self.Y_dct)
-        self.CB_dct = np.round(self.CB_dct)
-        self.CR_dct = np.round(self.CR_dct)
+        self.Y  = np.round(self.Y)
+        self.CB = np.round(self.CB)
+        self.CR = np.round(self.CR)
 
         if debugDCT:
             gray  = self.colormap('myGray', (1,1,1))
-            self.showColorMap(np.log(abs(self.Y_dct ) + 0.0001), gray, 'Y  iquantization')
-            self.showColorMap(np.log(abs(self.CB_dct) + 0.0001), gray, 'CB iquantization')
-            self.showColorMap(np.log(abs(self.CR_dct) + 0.0001), gray, 'CR iquantization')
+            self.showColorMap(np.log(abs(self.Y) + 0.0001), gray,  'Y iquantization')
+            self.showColorMap(np.log(abs(self.CB) + 0.0001), gray, 'CB iquantization')
+            self.showColorMap(np.log(abs(self.CR) + 0.0001), gray, 'CR iquantization')
 
 
     def calcQuality(self, quality):
@@ -394,29 +398,29 @@ class jpeg:
 
     
     def dpcm(self):
-        self.Y_dpcm = np.copy(self.Y_dct)
-        self.Cb_dpcm = np.copy(self.CB_dct)
-        self.Cr_dpcm = np.copy(self.CR_dct)
+        self.Y_dpcm = np.copy(self.Y)
+        self.Cb_dpcm = np.copy(self.CB)
+        self.Cr_dpcm = np.copy(self.CR)
 
         
-        for i in range(int(self.Y_dct.shape[0]/8)):
-            for j in range(int(self.Y_dct.shape[1]/8)):
+        for i in range(int(self.Y.shape[0]/8)):
+            for j in range(int(self.Y.shape[1]/8)):
                 if (j != 0):
-                    self.Y_dpcm[i*8, j*8] = self.Y_dct[i*8, j*8] - self.Y_dct[i*8, j*8-8]
+                    self.Y_dpcm[i*8, j*8] = self.Y[i*8, j*8] - self.Y[i*8, j*8-8]
                 else:
                     if(i != 0):
-                        self.Y_dpcm[i*8, j*8] = self.Y_dct[i*8, j*8] - self.Y_dct[i*8-8, int(self.Y_dct.shape[1])-8]
+                        self.Y_dpcm[i*8, j*8] = self.Y[i*8, j*8] - self.Y[i*8-8, int(self.Y.shape[1])-8]
         
 
-        for i in range(int(self.CB_dct.shape[0]/8)):
-            for j in range(int(self.CB_dct.shape[1]/8)):
+        for i in range(int(self.CB.shape[0]/8)):
+            for j in range(int(self.CB.shape[1]/8)):
                 if (j != 0):
-                    self.Cb_dpcm[i*8, j*8] = self.CB_dct[i*8, j*8] - self.CB_dct[i*8, j*8-8]
-                    self.Cr_dpcm[i*8, j*8] = self.CR_dct[i*8, j*8] - self.CR_dct[i*8, j*8-8]
+                    self.Cb_dpcm[i*8, j*8] = self.CB[i*8, j*8] - self.CB[i*8, j*8-8]
+                    self.Cr_dpcm[i*8, j*8] = self.CR[i*8, j*8] - self.CR[i*8, j*8-8]
                 else:
                     if(i != 0):
-                        self.Cb_dpcm[i*8, j*8] = self.CB_dct[i*8, j*8] - self.CB_dct[i*8-8, int(self.CB_dct.shape[1])-8]
-                        self.Cr_dpcm[i*8, j*8] = self.CR_dct[i*8, j*8] - self.CR_dct[i*8-8, int(self.CB_dct.shape[1])-8]
+                        self.Cb_dpcm[i*8, j*8] = self.CB[i*8, j*8] - self.CB[i*8-8, int(self.CB.shape[1])-8]
+                        self.Cr_dpcm[i*8, j*8] = self.CR[i*8, j*8] - self.CR[i*8-8, int(self.CB.shape[1])-8]
         
 
         if debugDPCM:
@@ -428,28 +432,28 @@ class jpeg:
 
     def reverse_dpcm(self):
 
-        self.Y_dct = np.copy(self.Y_dpcm)
-        self.CB_dct = np.copy(self.Cb_dpcm)
-        self.CR_dct = np.copy(self.Cr_dpcm)
+        self.Y = np.copy(self.Y_dpcm)
+        self.CB = np.copy(self.Cb_dpcm)
+        self.CR = np.copy(self.Cr_dpcm)
         
         for i in range(int(self.Y_dpcm.shape[0]/8)):
             for j in range(int(self.Y_dpcm.shape[1]/8)):
                 if (j != 0):
-                    self.Y_dct[i*8, j*8] = self.Y_dct[i*8, j*8-8] + self.Y_dpcm[i*8, j*8]
+                    self.Y[i*8, j*8] = self.Y[i*8, j*8-8] + self.Y_dpcm[i*8, j*8]
                 else:
                     if(i != 0):
-                        self.Y_dct[i*8, j*8] = self.Y_dct[i*8-8, int(self.Y_dpcm.shape[1])-8] + self.Y_dpcm[i*8, j*8]
+                        self.Y[i*8, j*8] = self.Y[i*8-8, int(self.Y_dpcm.shape[1])-8] + self.Y_dpcm[i*8, j*8]
                 
 
         for i in range(int(self.Cb_dpcm.shape[0]/8)):
             for j in range(int(self.Cb_dpcm.shape[1]/8)):
                 if (j != 0):
-                    self.CB_dct[i*8, j*8] = self.CB_dct[i*8, j*8-8] + self.Cb_dpcm[i*8, j*8] 
-                    self.CR_dct[i*8, j*8] = self.CR_dct[i*8, j*8-8] + self.Cr_dpcm[i*8, j*8] 
+                    self.CB[i*8, j*8] = self.CB[i*8, j*8-8] + self.Cb_dpcm[i*8, j*8] 
+                    self.CR[i*8, j*8] = self.CR[i*8, j*8-8] + self.Cr_dpcm[i*8, j*8] 
                 else:
                     if(i != 0):
-                        self.CB_dct[i*8, j*8] = self.CB_dct[i*8-8, int(self.Cb_dpcm.shape[1])-8] + self.Cb_dpcm[i*8, j*8] 
-                        self.CR_dct[i*8, j*8] = self.CR_dct[i*8-8, int(self.Cb_dpcm.shape[1])-8] + self.Cr_dpcm[i*8, j*8] 
+                        self.CB[i*8, j*8] = self.CB[i*8-8, int(self.Cb_dpcm.shape[1])-8] + self.Cb_dpcm[i*8, j*8] 
+                        self.CR[i*8, j*8] = self.CR[i*8-8, int(self.Cb_dpcm.shape[1])-8] + self.Cr_dpcm[i*8, j*8] 
 
 
     def encoder(self): 
