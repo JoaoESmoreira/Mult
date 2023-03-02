@@ -7,16 +7,15 @@ import cv2
 from scipy.fftpack import dct, idct
 
 
-debug = True
+debug = False
 debugSampling = False
-debugDCT = True
-debugDPCM = True
+debugDCT = False
+debugDPCM = False
 
 
 
 
 class jpeg:
-
 
     RGB_YCBCR=np.array([[0.299,0.587,0.114],[-0.168736, -0.331264, 0.5],[0.5, -0.418688, -0.081312]])
     YCBCR_RGB=np.linalg.inv(RGB_YCBCR)
@@ -39,8 +38,10 @@ class jpeg:
           [99, 99, 99, 99, 99, 99, 99, 99],
           [99, 99, 99, 99, 99, 99, 99, 99]])
 
+
     def __init__(self, filename):
         self.filename = filename
+
 
     def readImage(self):
         self.data = img.imread(self.filename)
@@ -55,6 +56,7 @@ class jpeg:
         plt.axis('off')
         plt.show()
     
+
     def showColorMap(self, data, colorMap, title=""):
         plt.figure()
         plt.axis('off')
@@ -62,18 +64,22 @@ class jpeg:
         plt.imshow(data, colorMap)
         plt.show()
 
+
     def splitChannels(self):
         self.R = self.data[:, :, 0]
         self.G = self.data[:, :, 1]
         self.B = self.data[:, :, 2]
+
 
     def splitChannelsPadding(self):
         self.R_P = self.dataPadding[:, :, 0]
         self.G_P = self.dataPadding[:, :, 1]
         self.B_P = self.dataPadding[:, :, 2]
 
+
     def merge_channels(self):
         return  np.dstack((self.R,self.G,self.B))
+
 
     def showChannels(self):
         red = self.colormap('myRed', (1,0,0))
@@ -389,12 +395,10 @@ class jpeg:
         self.qualityQ_Y, self.qualityQ_CBCR = qualityQ_Y, qualityQ_CBCR
 
 
-    
     def dpcm(self, blocks=8):
         self.Y_dpcm = np.copy(self.Y)
         self.Cb_dpcm = np.copy(self.CB)
         self.Cr_dpcm = np.copy(self.CR)
-
         
         for i in range(int(self.Y.shape[0]/blocks)):
             for j in range(int(self.Y.shape[1]/blocks)):
@@ -404,7 +408,6 @@ class jpeg:
                     if(i != 0):
                         self.Y_dpcm[i*blocks, j*blocks] = self.Y[i*blocks, j*blocks] - self.Y[i*blocks-blocks, int(self.Y.shape[1])-blocks]
         
-
         for i in range(int(self.CB.shape[0]/blocks)):
             for j in range(int(self.CB.shape[1]/blocks)):
                 if (j != 0):
@@ -415,7 +418,6 @@ class jpeg:
                         self.Cb_dpcm[i*blocks, j*blocks] = self.CB[i*blocks, j*blocks] - self.CB[i*blocks-blocks, int(self.CB.shape[1])-blocks]
                         self.Cr_dpcm[i*blocks, j*blocks] = self.CR[i*blocks, j*blocks] - self.CR[i*blocks-blocks, int(self.CB.shape[1])-blocks]
         
-
         if debugDPCM:
             gray  = self.colormap('myGray', (1,1,1))
             self.showColorMap(np.log(abs(self.Y_dpcm ) + 0.0001), gray, 'Y DPCM')
@@ -455,25 +457,42 @@ class jpeg:
             self.showColorMap(np.log(abs(self.CR) + 0.0001), gray, 'CR  reverse DPCM')
 
 
+    def stats(self):
+        img    = self.data.astype(float)
+        imgrec = self.dataPadding.astype(float)
+        shape  = np.shape(self.data)
+
+        MSE = np.sum(pow(img - imgrec, 2))/(int(shape[0]) * int(shape[1]))
+        RMSE = np.sqrt(MSE)
+        
+        P = np.sum(pow(img, 2))/(int(shape[0]) * int(shape[1]))
+        SNR = np.log10(P/MSE) * 10
+        PSNR = np.log10(pow(np.max(img), 2) / MSE) * 10
+
+        return MSE, RMSE, SNR, PSNR
+
+
     def encoder(self): 
         self.readImage()
-        self.showImage()
-        self.showChannels()
+        # self.showImage()
+        # self.showChannels()
         self.padding()
-
         self.splitChannelsPadding()
         self.rgbToYCbCr()
         self.sampling()
         self.dctBlock()
-        self.quantDCT(8,10)
+        self.quantDCT(8, 75)
         self.dpcm()
+
 
     def decoder(self):
         self.reverse_dpcm()
-        self.iQuantDCT(8,10)
+        self.iQuantDCT(8, 75)
         self.idctBlock()
         self.upSampling()
         self.YCbCrTorgb()
+
+        self.showImage(self.dataPadding)
 
 
 if __name__ == "__main__":
@@ -481,3 +500,8 @@ if __name__ == "__main__":
     a = jpeg('../../Assets/barn_mountains/barn_mountains.bmp')
     a.encoder()
     a.decoder()
+    MSE, RMSE, SNR, PSNR = a.stats()
+    print("MSE: ", MSE)
+    print("RMSE: ", RMSE)
+    print("SNR: ", SNR)
+    print("PSNR: ", PSNR)
