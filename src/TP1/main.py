@@ -7,7 +7,7 @@ import cv2
 from scipy.fftpack import dct, idct
 
 
-debug = False
+debug = True
 debugSampling = False
 debugDCT = True
 debugDPCM = True
@@ -44,9 +44,6 @@ class jpeg:
 
     def readImage(self):
         self.data = img.imread(self.filename)
-
-        if debug:
-            print(self.data)
 
 
     def showImage(self, *args):
@@ -134,9 +131,6 @@ class jpeg:
         self.CB = self.RGB_YCBCR[1][0] * self.R_P + self.RGB_YCBCR[1][1] * self.G_P + self.RGB_YCBCR[1][2] * self.B_P + 128
         self.CR = self.RGB_YCBCR[2][0] * self.R_P + self.RGB_YCBCR[2][1] * self.G_P + self.RGB_YCBCR[2][2] * self.B_P + 128
 
-        #self.CB[self.CB > 255] = 255
-        #self.CB[self.CB < 0] = 0
-
         gray  = self.colormap('myGray', (1,1,1))
 
         if debug:
@@ -152,10 +146,6 @@ class jpeg:
         self.G_ycbcr = (self.YCBCR_RGB[1][0] * self.Y) + (self.YCBCR_RGB[1][1] * (self.CB -128))  + (self.YCBCR_RGB[1][2] * (self.CR -128))
         self.B_ycbcr = (self.YCBCR_RGB[2][0] * self.Y) + (self.YCBCR_RGB[2][1] * (self.CB -128))  + (self.YCBCR_RGB[2][2] * (self.CR -128))
 
-        self.R_ycbcr = np.round(self.R_ycbcr).astype(np.uint8)
-        self.G_ycbcr = np.round(self.G_ycbcr).astype(np.uint8)
-        self.B_ycbcr = np.round(self.B_ycbcr).astype(np.uint8)
-
         self.R_ycbcr[self.R_ycbcr>255] = 255
         self.R_ycbcr[self.R_ycbcr<0] = 0
         
@@ -164,6 +154,10 @@ class jpeg:
 
         self.B_ycbcr[self.B_ycbcr>255] = 255
         self.B_ycbcr[self.B_ycbcr<0] = 0
+
+        self.R_ycbcr = np.round(self.R_ycbcr).astype(np.uint8)
+        self.G_ycbcr = np.round(self.G_ycbcr).astype(np.uint8)
+        self.B_ycbcr = np.round(self.B_ycbcr).astype(np.uint8)
         
         if debug:
             self.showImage(self.R_ycbcr)
@@ -331,9 +325,9 @@ class jpeg:
                 # self.CR_dct[i:i+blocks, j:j+blocks] = slice / self.q_cbcr
                 self.CR[i:i+blocks, j:j+blocks] = slice / self.qualityQ_CBCR
 
-        self.Y= np.round(self.Y)
-        self.CB = np.round(self.CB)
-        self.CR = np.round(self.CR)
+        self.Y = np.round(self.Y).astype(int)
+        self.CB = np.round(self.CB).astype(int)
+        self.CR = np.round(self.CR).astype(int)
 
         if debugDCT:
             gray  = self.colormap('myGray', (1,1,1))
@@ -363,9 +357,9 @@ class jpeg:
                 # self.CR_dct[i:i+blocks, j:j+blocks] = slice * self.q_cbcr
                 self.CR[i:i+blocks, j:j+blocks] = slice * self.qualityQ_CBCR
 
-        self.Y  = np.round(self.Y)
-        self.CB = np.round(self.CB)
-        self.CR = np.round(self.CR)
+        self.Y  = self.Y.astype(float)
+        self.CB = self.CB.astype(float)
+        self.CR = self.CR.astype(float)
 
         if debugDCT:
             gray  = self.colormap('myGray', (1,1,1))
@@ -383,44 +377,43 @@ class jpeg:
         qualityQ_Y = self.q_y * scaleFactor
         qualityQ_CBCR = self.q_cbcr * scaleFactor
 
-
-        qualityQ_CBCR = np.round(qualityQ_CBCR).astype(np.uint8)
-        qualityQ_Y = np.round(qualityQ_Y).astype(np.uint8)
-
         qualityQ_Y[qualityQ_Y < 1] = 1
         qualityQ_Y[qualityQ_Y > 255] = 255
 
         qualityQ_CBCR[qualityQ_CBCR < 1] = 1
         qualityQ_CBCR[qualityQ_CBCR > 255] = 255
 
+        qualityQ_CBCR = np.round(qualityQ_CBCR).astype(np.uint8)
+        qualityQ_Y = np.round(qualityQ_Y).astype(np.uint8)
+
         self.qualityQ_Y, self.qualityQ_CBCR = qualityQ_Y, qualityQ_CBCR
 
 
     
-    def dpcm(self):
+    def dpcm(self, blocks=8):
         self.Y_dpcm = np.copy(self.Y)
         self.Cb_dpcm = np.copy(self.CB)
         self.Cr_dpcm = np.copy(self.CR)
 
         
-        for i in range(int(self.Y.shape[0]/8)):
-            for j in range(int(self.Y.shape[1]/8)):
+        for i in range(int(self.Y.shape[0]/blocks)):
+            for j in range(int(self.Y.shape[1]/blocks)):
                 if (j != 0):
-                    self.Y_dpcm[i*8, j*8] = self.Y[i*8, j*8] - self.Y[i*8, j*8-8]
+                    self.Y_dpcm[i*blocks, j*blocks] = self.Y[i*blocks, j*blocks] - self.Y[i*blocks, j*blocks-blocks]
                 else:
                     if(i != 0):
-                        self.Y_dpcm[i*8, j*8] = self.Y[i*8, j*8] - self.Y[i*8-8, int(self.Y.shape[1])-8]
+                        self.Y_dpcm[i*blocks, j*blocks] = self.Y[i*blocks, j*blocks] - self.Y[i*blocks-blocks, int(self.Y.shape[1])-blocks]
         
 
-        for i in range(int(self.CB.shape[0]/8)):
-            for j in range(int(self.CB.shape[1]/8)):
+        for i in range(int(self.CB.shape[0]/blocks)):
+            for j in range(int(self.CB.shape[1]/blocks)):
                 if (j != 0):
-                    self.Cb_dpcm[i*8, j*8] = self.CB[i*8, j*8] - self.CB[i*8, j*8-8]
-                    self.Cr_dpcm[i*8, j*8] = self.CR[i*8, j*8] - self.CR[i*8, j*8-8]
+                    self.Cb_dpcm[i*blocks, j*blocks] = self.CB[i*blocks, j*blocks] - self.CB[i*blocks, j*blocks-blocks]
+                    self.Cr_dpcm[i*blocks, j*blocks] = self.CR[i*blocks, j*blocks] - self.CR[i*blocks, j*blocks-blocks]
                 else:
                     if(i != 0):
-                        self.Cb_dpcm[i*8, j*8] = self.CB[i*8, j*8] - self.CB[i*8-8, int(self.CB.shape[1])-8]
-                        self.Cr_dpcm[i*8, j*8] = self.CR[i*8, j*8] - self.CR[i*8-8, int(self.CB.shape[1])-8]
+                        self.Cb_dpcm[i*blocks, j*blocks] = self.CB[i*blocks, j*blocks] - self.CB[i*blocks-blocks, int(self.CB.shape[1])-blocks]
+                        self.Cr_dpcm[i*blocks, j*blocks] = self.CR[i*blocks, j*blocks] - self.CR[i*blocks-blocks, int(self.CB.shape[1])-blocks]
         
 
         if debugDPCM:
@@ -455,23 +448,29 @@ class jpeg:
                         self.CB[i*8, j*8] = self.CB[i*8-8, int(self.Cb_dpcm.shape[1])-8] + self.Cb_dpcm[i*8, j*8] 
                         self.CR[i*8, j*8] = self.CR[i*8-8, int(self.Cb_dpcm.shape[1])-8] + self.Cr_dpcm[i*8, j*8] 
 
+        if debugDPCM:
+            gray  = self.colormap('myGray', (1,1,1))
+            self.showColorMap(np.log(abs(self.Y) + 0.0001), gray, 'Y reverse DPCM')
+            self.showColorMap(np.log(abs(self.CB) + 0.0001), gray, 'CB reverse DPCM')
+            self.showColorMap(np.log(abs(self.CR) + 0.0001), gray, 'CR  reverse DPCM')
+
 
     def encoder(self): 
         self.readImage()
-        # self.showImage()
-        # self.showChannels()
+        self.showImage()
+        self.showChannels()
         self.padding()
 
         self.splitChannelsPadding()
         self.rgbToYCbCr()
         self.sampling()
         self.dctBlock()
-        self.quantDCT(8,75)
+        self.quantDCT(8,10)
         self.dpcm()
 
     def decoder(self):
         self.reverse_dpcm()
-        self.iQuantDCT(8,75)
+        self.iQuantDCT(8,10)
         self.idctBlock()
         self.upSampling()
         self.YCbCrTorgb()
