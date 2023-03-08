@@ -11,7 +11,7 @@ debug = False
 debugSampling = False
 debugDCT = False
 debugDPCM = False
-
+debugDescodification = True
 
 
 
@@ -49,8 +49,11 @@ class jpeg:
 
     def showImage(self, *args):
         plt.figure()
-        if len(args) > 0:
+        if len(args) == 1:
             plt.imshow(args[0])
+        elif len(args) == 2:
+            plt.imshow(args[0])
+            plt.title(args[1])
         else:
             plt.imshow(self.data)
         plt.axis('off')
@@ -138,6 +141,8 @@ class jpeg:
         self.CR = self.RGB_YCBCR[2][0] * self.R_P + self.RGB_YCBCR[2][1] * self.G_P + self.RGB_YCBCR[2][2] * self.B_P + 128
 
         gray  = self.colormap('myGray', (1,1,1))
+
+        self.safe = self.Y
 
         if debug:
             self.showColorMap(self.Y, gray)
@@ -470,9 +475,16 @@ class jpeg:
         PSNR = np.log10(pow(np.max(img), 2) / MSE) * 10
 
         return MSE, RMSE, SNR, PSNR
+    
+
+    def showDiffY(self, text='Diff image'):
+        aux   = abs(self.Y - self.safe)
+        gray  = self.colormap('myGray', (1,1,1))
+
+        self.showColorMap(aux, gray, text)
 
 
-    def encoder(self): 
+    def encoder(self, quality=75): 
         self.readImage()
         # self.showImage()
         # self.showChannels()
@@ -481,27 +493,38 @@ class jpeg:
         self.rgbToYCbCr()
         self.sampling()
         self.dctBlock()
-        self.quantDCT(8, 75)
+        self.quantDCT(8, quality)
         self.dpcm()
 
 
-    def decoder(self):
+    def decoder(self, quality=75):
         self.reverse_dpcm()
-        self.iQuantDCT(8, 75)
+        self.iQuantDCT(8, quality)
         self.idctBlock()
         self.upSampling()
         self.YCbCrTorgb()
 
-        self.showImage(self.dataPadding)
+        if debugDescodification:
+            self.showImage(self.dataPadding, "Descodification, quality: " + str(quality))
 
 
 if __name__ == "__main__":
     
     a = jpeg('../../Assets/barn_mountains/barn_mountains.bmp')
-    a.encoder()
-    a.decoder()
-    MSE, RMSE, SNR, PSNR = a.stats()
-    print("MSE: ", MSE)
-    print("RMSE: ", RMSE)
-    print("SNR: ", SNR)
-    print("PSNR: ", PSNR)
+    # a.encoder()
+    # a.decoder()
+    # a.showDiffY()
+
+    qualities = [10, 25, 50, 75, 100]
+
+    for quality in qualities:
+        print("Quality: ", quality)
+        a.encoder(quality)
+        a.decoder(quality)
+        a.showDiffY("Diff Image with quality: " + str(quality))
+
+        MSE, RMSE, SNR, PSNR = a.stats()
+        print("MSE: ", MSE)
+        print("RMSE: ", RMSE)
+        print("SNR: ", SNR)
+        print("PSNR: ", PSNR, "\n")
