@@ -481,6 +481,7 @@ class jpeg:
         aux   = abs(self.Y - self.safe)
         gray  = self.colormap('myGray', (1,1,1))
 
+        print("Mean: ", np.mean(aux))
         self.showColorMap(aux, gray, text)
 
 
@@ -511,9 +512,9 @@ class jpeg:
 if __name__ == "__main__":
     
     a = jpeg('../../Assets/barn_mountains/barn_mountains.bmp')
-    # a.encoder()
-    # a.decoder()
-    # a.showDiffY()
+    #a.encoder()
+    #a.decoder()
+    #a.showDiffY()
 
     qualities = [10, 25, 50, 75, 100]
 
