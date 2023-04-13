@@ -21,7 +21,7 @@ if __name__ == "__main__":
     
     #--- Load file
     #fName = "--/Queries/MT0000414517.mp3"
-    fName = "../Queries/MT0000202045.mp3"
+    fName = "assets/Queries/MT0000202045.mp3"
     sr = 22050
     mono = True
     warnings.filterwarnings("ignore")
@@ -49,7 +49,8 @@ if __name__ == "__main__":
     rms = rms[0, :]
     print(rms.shape)
     times = librosa.times_like(rms)
-    plt.figure(), plt.plot(times, rms)
+    plt.figure()
+    plt.plot(times, rms)
     plt.xlabel('Time (s)')
     plt.title('RMS')
     
