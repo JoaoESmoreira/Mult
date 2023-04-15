@@ -30,7 +30,7 @@ if __name__ == "__main__":
     print(fs)
     
     #--- Play Sound
-    #sd.play(y, sr, blocking=False)
+    sd.play(y, sr, blocking=False)
     
     #--- Plot sound waveform
     plt.figure()
