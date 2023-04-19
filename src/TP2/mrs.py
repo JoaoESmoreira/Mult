@@ -53,4 +53,5 @@ if __name__ == "__main__":
     plt.plot(times, rms)
     plt.xlabel('Time (s)')
     plt.title('RMS')
+    # plt.show()
     
