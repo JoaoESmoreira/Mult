@@ -186,45 +186,81 @@ class feature():
             if self.songsNames[i] == song:
                 indexSong = i
                 break
-        print("\n\n\n" + self.songsNames[indexSong])
+        # print("\n\n\n" + self.songsNames[indexSong])
+    
 
-        print("\nEUCLIDIAN 100F")
-        first20euclidian100 = np.argsort(self.euclidian100[indexSong , : ])[0:21].astype(int)
-        
-        for pos in first20euclidian100:
-            print(self.songsNames[pos] , end = " , ")
-        
 
-        print("\n\nMANHATTAN 100F")
-        first20manhattan100 = np.argsort(self.manhattan100[indexSong , : ])[0:21].astype(int)
-        for pos in first20manhattan100:
-            print(self.songsNames[pos] , end = " , ")
-
-        print("\n\nCOSINE 100F")
-        first20cosine100 = np.argsort(self.cosine100[indexSong , : ])[0:21].astype(int)
-        for pos in first20cosine100:
-            print(self.songsNames[pos] , end = " , ")
-
-        #-------------------------------------
-
-        print("\n\nEUCLIDIAN F")
-        first20euclidianF = np.argsort(self.euclidianF[indexSong , : ])[0:21].astype(int)
-        for pos in first20euclidianF:
-            print(self.songsNames[pos] , end = " , ")
-
-        print("\n\nMANHATTAN F")
-        first20manhattanF = np.argsort(self.manhattanF[indexSong , : ])[0:21].astype(int)
-        for pos in first20manhattanF:
-            print(self.songsNames[pos] , end = " , ")
-
-        print("\n\nCOSINE F")
-        first20cosineF = np.argsort(self.cosineF[indexSong , : ])[0:21].astype(int)
-        for pos in first20cosineF:
-            print(self.songsNames[pos] , end = " , ")
-         
+        with open('ranking.txt', 'w') as f:
+            f.write('query = ' + song + '\n')
             
+            print("\nEUCLIDIAN 100F")
+            first20euclidian100 = np.argsort(self.euclidian100[indexSong , : ])[0:21].astype(int)
+
+            with open('ranking.txt', 'a') as f:
+                f.write('Ranking: Euclidian 100F---------------\n[')
+            
+                for pos in range(len(first20euclidian100)):
+                    # print(self.songsNames[pos] , end = " , ")
+                    if(pos%3 == 0):
+                        f.write('\n')
+                    f.write("\'"+self.songsNames[first20euclidian100[pos]]+ "\' ")
+
+                f.write(']\n')
+                
+                # print("\n\nMANHATTAN 100F")
+                f.write('Ranking: Manhattan 100F---------------\n[')
+                first20manhattan100 = np.argsort(self.manhattan100[indexSong , : ])[0:21].astype(int)
+                for pos in range(len(first20manhattan100)):
+                    # print(self.songsNames[pos] , end = " , ")
+                    if(pos%3 == 0):
+                        f.write('\n')
+                    f.write("\'"+self.songsNames[first20manhattan100[pos]]+"\' ")
+                f.write(']\n')
+
+                # print("\n\nCOSINE 100F")
+                f.write('Ranking: Cosine 100F---------------\n[')
+                first20cosine100 = np.argsort(self.cosine100[indexSong , : ])[0:21].astype(int)
+                for pos in range(len(first20cosine100)):
+                    # print(self.songsNames[pos] , end = " , ")
+                    if(pos%3 == 0):
+                        f.write('\n')
+                    f.write("'"+self.songsNames[first20cosine100[pos]]+"' ")
+                f.write(']\n')
+                #-------------------------------------
+
+                # print("\n\nEUCLIDIAN F")
+                f.write('Ranking: Euclidian F---------------\n[')
+                first20euclidianF = np.argsort(self.euclidianF[indexSong , : ])[0:21].astype(int)
+                for pos in range(len(first20euclidianF)):
+                    # print(self.songsNames[pos] , end = " , ")
+                    if(pos%3 == 0):
+                        f.write('\n')
+                    f.write("'" +self.songsNames[first20euclidianF[pos]] + "' ")
+                f.write(']\n')
+
+                # print("\n\nMANHATTAN F")
+                f.write('Ranking: Manhattan F---------------\n[')
+                first20manhattanF = np.argsort(self.manhattanF[indexSong , : ])[0:21].astype(int)
+                for pos in range(len(first20manhattanF)):
+                    # print(self.songsNames[pos] , end = " , ")
+                    if(pos%3 == 0):
+                        f.write('\n')
+                    f.write("\'"+self.songsNames[first20manhattanF[pos]]+"\' ")
+                f.write(']\n')
+
+                # print("\n\nCOSINE F")
+                f.write('Ranking: Cosine F---------------\n[')
+                first20cosineF = np.argsort(self.cosineF[indexSong , : ])[0:21].astype(int)
+                for pos in range(len(first20cosineF)):
+                    # print(self.songsNames[pos] , end = " , ")
+                    if(pos%3 == 0):
+                        f.write('\n')
+                    f.write("\'"+self.songsNames[first20cosineF[pos]]+"\' ")
+                f.write(']\n')
+                
+                
                     
 
 if __name__ == "__main__":
     file = feature('./assets/top100_features.csv')
-    # file.showFeatures()
+    
