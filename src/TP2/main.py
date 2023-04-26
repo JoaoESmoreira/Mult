@@ -193,72 +193,71 @@ class feature():
         with open('ranking.txt', 'w') as f:
             f.write('query = ' + song + '\n')
             
-            print("\nEUCLIDIAN 100F")
+            # print("\nEUCLIDIAN 100F")
             first20euclidian100 = np.argsort(self.euclidian100[indexSong , : ])[0:21].astype(int)
+    
+            f.write('Ranking: Euclidian 100F---------------\n[')
+        
+            for pos in range(len(first20euclidian100)):
+                # print(self.songsNames[pos] , end = " , ")
+                if(pos%3 == 0):
+                    f.write('\n')
+                f.write("\'"+self.songsNames[first20euclidian100[pos]]+ "\' ")
 
-            with open('ranking.txt', 'a') as f:
-                f.write('Ranking: Euclidian 100F---------------\n[')
+            f.write(']\n')
             
-                for pos in range(len(first20euclidian100)):
-                    # print(self.songsNames[pos] , end = " , ")
-                    if(pos%3 == 0):
-                        f.write('\n')
-                    f.write("\'"+self.songsNames[first20euclidian100[pos]]+ "\' ")
+            # print("\n\nMANHATTAN 100F")
+            f.write('Ranking: Manhattan 100F---------------\n[')
+            first20manhattan100 = np.argsort(self.manhattan100[indexSong , : ])[0:21].astype(int)
+            for pos in range(len(first20manhattan100)):
+                # print(self.songsNames[pos] , end = " , ")
+                if(pos%3 == 0):
+                    f.write('\n')
+                f.write("\'"+self.songsNames[first20manhattan100[pos]]+"\' ")
+            f.write(']\n')
 
-                f.write(']\n')
-                
-                # print("\n\nMANHATTAN 100F")
-                f.write('Ranking: Manhattan 100F---------------\n[')
-                first20manhattan100 = np.argsort(self.manhattan100[indexSong , : ])[0:21].astype(int)
-                for pos in range(len(first20manhattan100)):
-                    # print(self.songsNames[pos] , end = " , ")
-                    if(pos%3 == 0):
-                        f.write('\n')
-                    f.write("\'"+self.songsNames[first20manhattan100[pos]]+"\' ")
-                f.write(']\n')
+            # print("\n\nCOSINE 100F")
+            f.write('Ranking: Cosine 100F---------------\n[')
+            first20cosine100 = np.argsort(self.cosine100[indexSong , : ])[0:21].astype(int)
+            for pos in range(len(first20cosine100)):
+                # print(self.songsNames[pos] , end = " , ")
+                if(pos%3 == 0):
+                    f.write('\n')
+                f.write("'"+self.songsNames[first20cosine100[pos]]+"' ")
+            f.write(']\n')
+            #-------------------------------------
 
-                # print("\n\nCOSINE 100F")
-                f.write('Ranking: Cosine 100F---------------\n[')
-                first20cosine100 = np.argsort(self.cosine100[indexSong , : ])[0:21].astype(int)
-                for pos in range(len(first20cosine100)):
-                    # print(self.songsNames[pos] , end = " , ")
-                    if(pos%3 == 0):
-                        f.write('\n')
-                    f.write("'"+self.songsNames[first20cosine100[pos]]+"' ")
-                f.write(']\n')
-                #-------------------------------------
+            # print("\n\nEUCLIDIAN F")
+            f.write('Ranking: Euclidian F---------------\n[')
+            first20euclidianF = np.argsort(self.euclidianF[indexSong , : ])[0:21].astype(int)
+            for pos in range(len(first20euclidianF)):
+                # print(self.songsNames[pos] , end = " , ")
+                if(pos%3 == 0):
+                    f.write('\n')
+                f.write("'" +self.songsNames[first20euclidianF[pos]] + "' ")
+            f.write(']\n')
 
-                # print("\n\nEUCLIDIAN F")
-                f.write('Ranking: Euclidian F---------------\n[')
-                first20euclidianF = np.argsort(self.euclidianF[indexSong , : ])[0:21].astype(int)
-                for pos in range(len(first20euclidianF)):
-                    # print(self.songsNames[pos] , end = " , ")
-                    if(pos%3 == 0):
-                        f.write('\n')
-                    f.write("'" +self.songsNames[first20euclidianF[pos]] + "' ")
-                f.write(']\n')
+            # print("\n\nMANHATTAN F")
+            f.write('Ranking: Manhattan F---------------\n[')
+            first20manhattanF = np.argsort(self.manhattanF[indexSong , : ])[0:21].astype(int)
+            for pos in range(len(first20manhattanF)):
+                # print(self.songsNames[pos] , end = " , ")
+                if(pos%3 == 0):
+                    f.write('\n')
+                f.write("\'"+self.songsNames[first20manhattanF[pos]]+"\' ")
+            f.write(']\n')
 
-                # print("\n\nMANHATTAN F")
-                f.write('Ranking: Manhattan F---------------\n[')
-                first20manhattanF = np.argsort(self.manhattanF[indexSong , : ])[0:21].astype(int)
-                for pos in range(len(first20manhattanF)):
-                    # print(self.songsNames[pos] , end = " , ")
-                    if(pos%3 == 0):
-                        f.write('\n')
-                    f.write("\'"+self.songsNames[first20manhattanF[pos]]+"\' ")
-                f.write(']\n')
-
-                # print("\n\nCOSINE F")
-                f.write('Ranking: Cosine F---------------\n[')
-                first20cosineF = np.argsort(self.cosineF[indexSong , : ])[0:21].astype(int)
-                for pos in range(len(first20cosineF)):
-                    # print(self.songsNames[pos] , end = " , ")
-                    if(pos%3 == 0):
-                        f.write('\n')
-                    f.write("\'"+self.songsNames[first20cosineF[pos]]+"\' ")
-                f.write(']\n')
-                
-                
+            # print("\n\nCOSINE F")
+            f.write('Ranking: Cosine F---------------\n[')
+            first20cosineF = np.argsort(self.cosineF[indexSong , : ])[0:21].astype(int)
+            for pos in range(len(first20cosineF)):
+                # print(self.songsNames[pos] , end = " , ")
+                if(pos%3 == 0):
+                    f.write('\n')
+                f.write("\'"+self.songsNames[first20cosineF[pos]]+"\' ")
+            f.write(']\n')
+            
+            
                     
 
 if __name__ == "__main__":
