@@ -190,7 +190,7 @@ class feature():
     
 
 
-        with open('ranking.txt', 'w') as f:
+        with open('ranking ' + song + '.txt', 'w') as f:
             f.write('query = ' + song + '\n')
             
             # print("\nEUCLIDIAN 100F")
