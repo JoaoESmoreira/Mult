@@ -25,8 +25,8 @@ class file():
     
 
 if __name__ == "__main__":
-    a = file('featuresStates.csv')
-    b = file('notNormFMrosa.csv')
+    a = file('featuresStatesNormalizated.csv')
+    b = file('resultados/FMrosa.csv')
 
     output = a.compare(b.getData()[0])
     print(np.shape(output))
