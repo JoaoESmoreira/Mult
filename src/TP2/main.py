@@ -56,7 +56,7 @@ class feature():
             for i in range(4):
                 file.write(self.songsNames2[i] + "\n\n")  
                 for j in range(6):
-                    file.write(metrics[j]+ " " +  str(len(np.intersect1d(self.metadataRanking[i], self.rankings[i*6+j]))/20) + "\n")
+                    file.write(metrics[j]+ " " +  str((len(np.intersect1d(self.metadataRanking[i], self.rankings[i*6+j]))-1)/20) + "\n")
                 file.write("\n\n")
 
 

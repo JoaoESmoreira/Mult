@@ -1,40 +1,40 @@
 MT0000202045.mp3
 
-Euclidian_top100 0.05
-Manhattan_top100 0.05
-Cosine_top100 0.05
-Euclidian_features 0.05
-Manhattan_features 0.05
-Cosine_features 0.05
+Euclidian_top100 0.0
+Manhattan_top100 0.0
+Cosine_top100 0.0
+Euclidian_features 0.0
+Manhattan_features 0.0
+Cosine_features 0.0
 
 
 MT0000379144.mp3
 
-Euclidian_top100 0.05
-Manhattan_top100 0.05
-Cosine_top100 0.05
-Euclidian_features 0.05
-Manhattan_features 0.05
-Cosine_features 0.05
+Euclidian_top100 0.0
+Manhattan_top100 0.0
+Cosine_top100 0.0
+Euclidian_features 0.0
+Manhattan_features 0.0
+Cosine_features 0.0
 
 
 MT0000414517.mp3
 
-Euclidian_top100 0.15
-Manhattan_top100 0.2
-Cosine_top100 0.2
-Euclidian_features 0.15
-Manhattan_features 0.15
-Cosine_features 0.15
+Euclidian_top100 0.1
+Manhattan_top100 0.15
+Cosine_top100 0.15
+Euclidian_features 0.1
+Manhattan_features 0.1
+Cosine_features 0.1
 
 
 MT0000956340.mp3
 
-Euclidian_top100 0.2
-Manhattan_top100 0.15
-Cosine_top100 0.2
-Euclidian_features 0.05
-Manhattan_features 0.05
-Cosine_features 0.05
+Euclidian_top100 0.15
+Manhattan_top100 0.1
+Cosine_top100 0.15
+Euclidian_features 0.0
+Manhattan_features 0.0
+Cosine_features 0.0
 
 
