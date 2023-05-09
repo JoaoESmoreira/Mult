@@ -17,29 +17,26 @@ class feature():
         self.fmin = 20
         self.fmax = self.sr // 2
 
-        #self.features = self.__readTop100features(path)
-        #self.features = self.__normalization(0, 1, self.features)
-        #self.__saveFeatures("./feature.csv", self.features)
-        self.features = self.__readFile('./feature.csv')
+        self.features = self.__readTop100features(path)
+        self.features = self.__normalization(0, 1, self.features)
+        self.__saveFeatures("./feature.csv", self.features)
+
+        #self.features = self.__readFile('./feature.csv')
 
         self.songsNames = self.__readDirectory("./assets/songs/")
         self.songsNames2 = self.__readDirectory("./assets/Queries/")
-        #self.__getFeatures("./assets/songs/")
-        #self.__saveFeatures("./featuresStates.csv", self.featuresStats)
 
-        self.featuresStats = self.__readFile('./featuresStates.csv')
-        self.featuresStatsNormalizated = self.__readFile('./featuresStatesNormalizated.csv')
-        #
-        #self.featuresStatsNormalizated = self.__normalization(0, 1, self.featuresStats)
-        #self.__saveFeatures("./featuresStatesNormalizated.csv", self.featuresStatsNormalizated)
+        self.__getFeatures("./assets/songs/")
         
-        # self.metricasSim()
-        self.euclidian100 = self.__readFile('./euclidian_top100.csv')
-        self.manhattan100 = self.__readFile('./manhattan_top100.csv')
-        self.cosine100 = self.__readFile('./cosine_top100.csv')
-        self.euclidianF = self.__readFile('./euclidian_features.csv')
-        self.manhattanF = self.__readFile('./manhattan_features.csv')
-        self.cosineF = self.__readFile('./cosine_features.csv')
+
+        if isfile("./featuresStatesNormalized.csv"):
+            self.featuresStatsNormalizated = self.__readFile('./featuresStatesNormalized.csv')
+        else:
+            self.featuresStatsNormalizated = self.__normalization(0, 1, self.featuresStats)
+            self.__saveFeatures("./featuresStatesNormalized.csv", self.featuresStatsNormalizated)
+        
+        self.metricasSim()
+        
 
         self.ranking()
         self.metadata()
@@ -164,56 +161,62 @@ class feature():
 
 
     def __getFeatures(self, path):
-        lenSongs = int(np.shape(self.songsNames)[0])
-        self.featuresStats = np.arange(lenSongs*190, dtype=object).reshape((lenSongs, 190))
+        if isfile("./featuresStates.csv"):
+            self.featuresStats = self.__readFile('./featuresStates.csv')
+        else:
+            lenSongs = int(np.shape(self.songsNames)[0])
+            self.featuresStats = np.arange(lenSongs*190, dtype=object).reshape((lenSongs, 190))
 
-        for song in range(lenSongs):
-            songName = self.songsNames[song]
-            y, fs = librosa.load(path + songName, sr=self.sr, mono=self.mono)
+            for song in range(lenSongs):
+                songName = self.songsNames[song]
+                y, fs = librosa.load(path + songName, sr=self.sr, mono=self.mono)
 
-            # =============== MFCC ===========================
-            mfcc = librosa.feature.mfcc(y=y, sr=self.sr, n_mfcc=13)
-            for i in range(len(mfcc)):
-                self.featuresStats[song, i*7:i*7+7] = self.extrationStats(mfcc[i])
+                # =============== MFCC ===========================
+                mfcc = librosa.feature.mfcc(y=y, sr=self.sr, n_mfcc=13)
+                for i in range(len(mfcc)):
+                    self.featuresStats[song, i*7:i*7+7] = self.extrationStats(mfcc[i])
 
-            # =============== Centroid ===========================
-            centroid = librosa.feature.spectral_centroid(y=y, sr=self.sr)[0]
-            self.featuresStats[song, 91:91+7] = self.extrationStats(centroid)
-            
-            # =============== BandWidth ===========================
-            bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=self.sr)[0]
-            self.featuresStats[song, 98:98+7] = self.extrationStats(bandwidth)
+                # =============== Centroid ===========================
+                centroid = librosa.feature.spectral_centroid(y=y, sr=self.sr)[0]
+                self.featuresStats[song, 91:91+7] = self.extrationStats(centroid)
+                
+                # =============== BandWidth ===========================
+                bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=self.sr)[0]
+                self.featuresStats[song, 98:98+7] = self.extrationStats(bandwidth)
 
-            # =============== Contrast ===========================
-            contrast = librosa.feature.spectral_contrast(y=y, sr=self.sr)
-            for i in range(len(contrast)):
-                self.featuresStats[song, 105+i*7:105+i*7+7] = self.extrationStats(contrast[i])
+                # =============== Contrast ===========================
+                contrast = librosa.feature.spectral_contrast(y=y, sr=self.sr)
+                for i in range(len(contrast)):
+                    self.featuresStats[song, 105+i*7:105+i*7+7] = self.extrationStats(contrast[i])
 
-            # =============== flatness ===========================
-            flatness = librosa.feature.spectral_flatness(y=y)[0]
-            self.featuresStats[song, 154:154+7] = self.extrationStats(flatness)
+                # =============== flatness ===========================
+                flatness = librosa.feature.spectral_flatness(y=y)[0]
+                self.featuresStats[song, 154:154+7] = self.extrationStats(flatness)
 
-            # =============== rolloff ===========================
-            rolloff = librosa.feature.spectral_rolloff(y=y, sr=self.sr)[0]
-            self.featuresStats[song, 161:161+7] = self.extrationStats(rolloff)
+                # =============== rolloff ===========================
+                rolloff = librosa.feature.spectral_rolloff(y=y, sr=self.sr)[0]
+                self.featuresStats[song, 161:161+7] = self.extrationStats(rolloff)
 
-            # =============== f0 ===========================
-            f0 = librosa.yin(y=y, fmin=self.fmin, fmax=self.fmax)
-            f0[f0==self.fmax] = 0
-            self.featuresStats[song, 168:168+7] = self.extrationStats(f0)  
-            
-            # =============== RMS ===========================
-            rms = librosa.feature.rms(y=y)[0]
-            self.featuresStats[song, 175:175+7] = self.extrationStats(rms)
+                # =============== f0 ===========================
+                f0 = librosa.yin(y=y, fmin=self.fmin, fmax=self.fmax)
+                f0[f0==self.fmax] = 0
+                self.featuresStats[song, 168:168+7] = self.extrationStats(f0)  
+                
+                # =============== RMS ===========================
+                rms = librosa.feature.rms(y=y)[0]
+                self.featuresStats[song, 175:175+7] = self.extrationStats(rms)
 
-            # =============== Cross ===========================
-            zero_cross = librosa.feature.zero_crossing_rate(y=y)[0]
-            self.featuresStats[song, 182:182+7] = self.extrationStats(zero_cross)
-            
-            # =============== Time ===========================
-            # time = librosa.beat.tempo(y=y)
-            time = librosa.feature.tempo(y=y)
-            self.featuresStats[song, -1] = time[0]
+                # =============== Cross ===========================
+                zero_cross = librosa.feature.zero_crossing_rate(y=y)[0]
+                self.featuresStats[song, 182:182+7] = self.extrationStats(zero_cross)
+                
+                # =============== Time ===========================
+                # time = librosa.beat.tempo(y=y)
+                time = librosa.feature.tempo(y=y)
+                self.featuresStats[song, -1] = time[0]
+
+
+            self.__saveFeatures("./featuresStates.csv", self.featuresStats)
 
 
     def showFeatures(self):
@@ -223,31 +226,39 @@ class feature():
     
 
     def metricasSim(self):
-        self.euclidian100 = np.zeros((900,900))
-        self.manhattan100 = np.zeros((900,900))
-        self.cosine100 = np.zeros((900,900))
-        self.euclidianF = np.zeros((900,900))
-        self.manhattanF = np.zeros((900,900))
-        self.cosineF = np.zeros((900,900))
+        if isfile("./euclidian_top100.csv"):
+            self.euclidian100 = self.__readFile('./euclidian_top100.csv')
+            self.manhattan100 = self.__readFile('./manhattan_top100.csv')
+            self.cosine100 = self.__readFile('./cosine_top100.csv')
+            self.euclidianF = self.__readFile('./euclidian_features.csv')
+            self.manhattanF = self.__readFile('./manhattan_features.csv')
+            self.cosineF = self.__readFile('./cosine_features.csv')
+        else:
+            self.euclidian100 = np.zeros((900,900))
+            self.manhattan100 = np.zeros((900,900))
+            self.cosine100 = np.zeros((900,900))
+            self.euclidianF = np.zeros((900,900))
+            self.manhattanF = np.zeros((900,900))
+            self.cosineF = np.zeros((900,900))
 
-        for i in range(900):
-            for j in range(900):
-                self.euclidian100[i][j] = np.linalg.norm(self.features[i] - self.features[j])
-                self.manhattan100[i][j] = cityblock(self.features[i], self.features[j])
-                self.cosine100[i][j] = cosine(self.features[i],self.features[j])
+            for i in range(900):
+                for j in range(900):
+                    self.euclidian100[i][j] = np.linalg.norm(self.features[i] - self.features[j])
+                    self.manhattan100[i][j] = cityblock(self.features[i], self.features[j])
+                    self.cosine100[i][j] = cosine(self.features[i],self.features[j])
 
-                self.euclidianF[i][j] = np.linalg.norm(self.featuresStatsNormalizated[i] - self.featuresStatsNormalizated[j])
-                self.manhattanF[i][j] = cityblock(self.featuresStatsNormalizated[i], self.featuresStatsNormalizated[j])
-                self.cosineF[i][j] = cosine(self.featuresStatsNormalizated[i],self.featuresStatsNormalizated[j])
-        
-        self.__saveFeatures("./euclidian_top100.csv", self.euclidian100)
-        self.__saveFeatures("./euclidian_features.csv", self.euclidianF)
-        
-        self.__saveFeatures("./manhattan_top100.csv", self.manhattan100)
-        self.__saveFeatures("./manhattan_features.csv", self.manhattanF)
-        
-        self.__saveFeatures("./cosine_top100.csv", self.cosine100)
-        self.__saveFeatures("./cosine_features.csv", self.cosineF)
+                    self.euclidianF[i][j] = np.linalg.norm(self.featuresStatsNormalizated[i] - self.featuresStatsNormalizated[j])
+                    self.manhattanF[i][j] = cityblock(self.featuresStatsNormalizated[i], self.featuresStatsNormalizated[j])
+                    self.cosineF[i][j] = cosine(self.featuresStatsNormalizated[i],self.featuresStatsNormalizated[j])
+            
+            self.__saveFeatures("./euclidian_top100.csv", self.euclidian100)
+            self.__saveFeatures("./euclidian_features.csv", self.euclidianF)
+            
+            self.__saveFeatures("./manhattan_top100.csv", self.manhattan100)
+            self.__saveFeatures("./manhattan_features.csv", self.manhattanF)
+            
+            self.__saveFeatures("./cosine_top100.csv", self.cosine100)
+            self.__saveFeatures("./cosine_features.csv", self.cosineF)
 
 
     def ranking(self):
