@@ -36,12 +36,11 @@ class feature():
             self.__saveFeatures("./featuresStatesNormalized.csv", self.featuresStatsNormalizated)
         
         self.metricasSim()
-        
-
         self.ranking()
+
+
         self.metadata()
         self.metadataRankingCalc()
-
         self.precision()
         
         
@@ -64,9 +63,9 @@ class feature():
             self.metadados = np.genfromtxt('./assets/panda_dataset_taffc_metadata.csv', dtype="str", delimiter=",")[1:, [1, 3, 9, 11]]
             self.meta_mat = np.zeros((900,900))
 
-            #ALTERAR RANGE
+            
             for x in range(900):
-                for y in range(900):
+                for y in range(x+1,900):
                     cont = 0
                     if(self.metadados[x][0] == self.metadados[y][0]):
                         cont+=1
@@ -87,7 +86,18 @@ class feature():
                             cont+=1
 
                     self.meta_mat[x][y] = cont
+                    self.meta_mat[y][x] = cont
             np.savetxt("./similaridade.csv", self.meta_mat, fmt = "%d", delimiter= ",")
+        
+
+
+    def metadataRankingCalc(self):
+        self.metadataRanking = np.zeros((4, 21))
+        for i in range(len(self.songsNames2)):
+            indexSong = self.songsNames.index(self.songsNames2[i])
+            self.metadataRanking[i] = np.argsort(self.meta_mat[indexSong , : ])[-21:].astype(int)[::-1]
+
+
         #with open('ranking_meta.txt', 'w') as f:
         #    for song in range(len(self.songsNames2)):
         #        f.write('\n\nquery = ' + self.songsNames2[song] + '\n')
@@ -101,13 +111,6 @@ class feature():
         #        for pos in range(len(first20)):
         #            f.write(str(self.meta_mat[indexSong,first20[pos]]) + ", ")
         #        f.write(']\n')
-
-
-    def metadataRankingCalc(self):
-        self.metadataRanking = np.zeros((4, 21))
-        for i in range(len(self.songsNames2)):
-            indexSong = self.songsNames.index(self.songsNames2[i])
-            self.metadataRanking[i] = np.argsort(self.meta_mat[indexSong , : ])[-21:].astype(int)[::-1]
 
 
     def __readTop100features(self, path):
@@ -242,14 +245,20 @@ class feature():
             self.cosineF = np.zeros((900,900))
 
             for i in range(900):
-                for j in range(900):
+                for j in range(i+1,900):
                     self.euclidian100[i][j] = np.linalg.norm(self.features[i] - self.features[j])
+                    self.euclidian100[j][i] = self.euclidian100[i][j]
                     self.manhattan100[i][j] = cityblock(self.features[i], self.features[j])
+                    self.manhattan100[j][i] = self.manhattan100[i][j]
                     self.cosine100[i][j] = cosine(self.features[i],self.features[j])
+                    self.cosine100[j][i] = self.cosine100[i][j]
 
                     self.euclidianF[i][j] = np.linalg.norm(self.featuresStatsNormalizated[i] - self.featuresStatsNormalizated[j])
+                    self.euclidianF[j][i] = self.euclidianF[i][j]
                     self.manhattanF[i][j] = cityblock(self.featuresStatsNormalizated[i], self.featuresStatsNormalizated[j])
+                    self.manhattanF[j][i] = self.manhattanF[i][j]
                     self.cosineF[i][j] = cosine(self.featuresStatsNormalizated[i],self.featuresStatsNormalizated[j])
+                    self.cosineF[j][i] = self.cosineF[i][j]
             
             self.__saveFeatures("./euclidian_top100.csv", self.euclidian100)
             self.__saveFeatures("./euclidian_features.csv", self.euclidianF)
